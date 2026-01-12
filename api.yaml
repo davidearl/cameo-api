@@ -1,19 +1,34 @@
 ---
 openapi: 3.0.2
 info:
-  title: Cameo
-  version: 1.0.0
-  description: https://cameo-membership.uk
+  title: Cameo Membership
+  version: 11.0.1
+  description: |
+    Cameo is a cloud app for managing a membership-based organisation.
+    Its API helps integrate with your website (though most API use is provided via plugins and embeddable forms)
   contact:
-    name: Cameo Administrator
+    name: Cameo Membership
     url: https://cameo-membership.uk
     email: admin@cameo-membership.uk
+servers:
+  - url: https://your-domain.com/api
+    description: Enter your Cameo instance URL (replace your-domain.com with your actual domain)
+tags:
+  - name: Cameo API
+    description: 
+  - name: Events and bookings
+    description: 
+  - name: Lists
+    description: 
+security:
+  - BasicAuth: []
 paths:
   /allocatemembershipnumber.json:
-    summary: allocatemembershipnumber
-    description: "To allocate a new, unique membership number, for example to use\
-      \ in a membership form."
+    description: |
+      To allocate a new, unique membership number, for example to use in a membership form.
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -25,26 +40,24 @@ paths:
           $ref: '#/components/responses/401'
         "500":
           $ref: '#/components/responses/500'
-      security:
-      - BasicAuth: []
       operationId: allocatemembershipnumber
-      summary: allocatemembershipnumber.json
-      description: "To allocate a new, unique membership number, for example to use\
-        \ in a membership form.\r\n\r\nNote that it is possible to preallocate a pool\
-        \ of unused membership\r\nnumbers for use on occasions when the API cannot\
-        \ be accessed for\r\nwhatever reason.\r\n\r\nIt is important that membership\
-        \ numbers are uniquely\r\nallocated. For this reason, the allocation is done\
-        \ in a critical\r\nsection so that two nearly-simultaneous requests cannot\
-        \ accidentally\r\nallocate the same number."
+      summary: get the next available, unique membership number
+      description: |
+        To allocate a new, unique membership number, for example to use
+        in a membership form.
+
+        Note that it is possible to preallocate a pool of unused membership
+        numbers for use on occasions when the API cannot be accessed for
+        whatever reason.
+
+        It is important that membership numbers are uniquely
+        allocated. For this reason, the allocation is done
+        in a critical section so that two nearly-simultaneous requests cannot
+        accidentally allocate the same number.
   /contact.json:
-    summary: contact
-    description: "Returns limited information about a membership with the given qrcode.\r\
-      \n\r\nPlease do not disclose the membership number in any pages displayed as\r\
-      \na result, and be careful with other information, so that probes for\r\ndata\
-      \ won't be helpful.\r\n\r\nVery similar to /email.json and /qrcode.json\r\n\r\
-      \nNote: as this is a new API call, there is no legacy type field, only\r\n_type,\
-      \ but in any case type can only be 'contact'."
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -60,20 +73,25 @@ paths:
               examples:
                 "404":
                   value: membership with qrcode 'ABCDE2' not found
-          description: No contact with the provided qrcode exists
+          description: |
+            No contact with the provided qrcode exists
         "400":
           content:
             text/plain:
               examples:
                 "400":
                   value: no qrcode
-          description: Either qrocde is missing or is not in the required format
-      summary: contact.json
-      description: "a JSON object with a membership information, as follows;\r\nwhere\
-        \ available, local government area codes for representatives'\r\nlocal government\
-        \ area (`contactbody` and `contactarea`), for any\r\ncontact type which is\
-        \ marked as 'political', is provided in an element\r\n`government`, including\
-        \ some or all of `mapitid`, `ons` and `gss`\r\ncodes:"
+          description: |
+            Either qrcode is missing or is not in the required format
+      summary: obtain a contact record from its qrcode
+      description: |
+        Returns limited information about a membership with the given qrcode.
+
+        Please do not disclose the membership number in any pages displayed as
+        a result, and be careful with other information, so that probes for
+        data won't be helpful.
+
+        Very similar to /email.json and /qrcode.json
     parameters:
     - examples:
         qrcode:
@@ -84,12 +102,43 @@ paths:
         $ref: '#/components/schemas/qp-qrcode'
       in: query
       required: true
-  /displayemail.json:
-    summary: displayemail.json
-    description: "Returns date, subject and content of a personalised email (as prepared\r\
-      \nby merging an email template), so that you can implement a \"view email\r\n\
-      in browser\" link at the top of emails."
+  /discounts.json:
     get:
+      tags:
+        - Cameo API
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-discounts'
+          description: |
+            Success.
+
+            A JSON array of objects useful for populating a page listing
+            establishments which offer discounts to members. Each would be a contact which has the
+            _Members’ discount offered_ box ticked in the contact record.
+
+            Don't rely on any of the fields shown in the example being present. There may also be an
+            `address2` field. The location, if given, may be useful for showing
+            where they are on a map.
+
+            `discountdetails` may be an empty string.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      operationId: discounts
+      summary: obtain details for contacts offering member discounts
+      description: |
+        Information with which to create a page listing establishements offering member discounts.
+
+        Please cache the result and arrange to update at intervals, for example daily. This avoids putting
+        load on Cameo by making the request every time someone visits your listings page.
+  /displayemail.json:
+    get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -115,10 +164,14 @@ paths:
           $ref: '#/components/responses/401'
         "500":
           $ref: '#/components/responses/500'
-      summary: displayemail.json
-      description: "Returns date, subject and content of a personalised email (as\
-        \ prepared\r\nby merging an email template), so that you can implement a \"\
-        view email\r\nin browser\" link at the top of emails."
+      summary: obtain an email from its identifier
+      description: |
+        Returns date, subject and content of a personalised email (as
+        prepared by merging an email template), so that you can implement a "view email
+        in browser" link at the top of emails (if you can't use the _email_ form that does this for you).
+        
+        `id` is typically supplied to a web page via the _msg_ query parameter
+        (or as set up in Cameo's system preferences)
     parameters:
     - name: id
       description: ""
@@ -126,50 +179,17 @@ paths:
         $ref: '#/components/schemas/qp-uidhash'
       in: query
       required: true
-  /discounts.json:
-    summary: discounts.json
-    description: Information with which to create a page listing establishements offering
-      member discounts
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/response-discounts'
-          description: |-
-            Success.
-
-            A JSON array of objects useful for populating a page listing
-            establishments which offer discounts to members. Each would be a contact which has the _Members’ discount offered_
-            box ticked in the contact record.
-
-            Don't rely on any of the fields shown in the example being present. There may also be an
-            `address2` field. The location, if given, may be useful for showing
-            where they are on a map.
-
-            `discountdetails` may be an empty string.
-        "401":
-          $ref: '#/components/responses/401'
-        "500":
-          $ref: '#/components/responses/500'
-      operationId: discounts
-      summary: discounts.json
-      description: |-
-        Information with which to create a page listing establishements offering member discounts.
-
-        Please cache the result and arrange to update at intervals, for example daily. This avoids putting load on Cameo by making the request every time someone visits your listings page.
   /email.json:
-    summary: email.json
-    description: Returns a membership record by email address
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-email'
-          description: |-
+          description: |
             Success.
 
             Membership record returned
@@ -192,8 +212,8 @@ paths:
                   value: membership with email 'jane@doe.com' not found
           description: No membership with that email address exists
       operationId: email
-      summary: email.json
-      description: Retrieves a subset of the membership record for which one individual
+      summary: returns an individual from their email address
+      description: Retrieves a subset of the membership record for the one individual
         has the given (primary) email address.
     parameters:
     - name: email
@@ -203,10 +223,9 @@ paths:
       in: query
       required: true
   /emailinfo.json:
-    summary: emailinfo.json
-    description: "Given an email address, returns basic identification for a membership\
-      \ (which can then be retrieved in full, if needed, via other api endpoints)"
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -224,8 +243,8 @@ paths:
               examples:
                 "400":
                   value: Missing hash
-          description: "Missing or invalid hash, not a current member when currentonly\
-            \ is set"
+          description: |
+            Missing or invalid hash, not a current member when currentonly is set
         "404":
           content:
             text/plain:
@@ -234,32 +253,35 @@ paths:
                   value: No such email
           description: Email with given hash not found
       operationId: emailinfo
-      summary: emailinfo.json
-      description: "Given an email identifier (uid hash), returns basic identification\
-        \ for a membership (which can then be retrieved in full, if needed, via other\
-        \ api endpoints)"
+      summary: obtain basic details about email recipient from the message's identifier
+      description: |
+        Given an email identifier (typically supplied to a page through a msg query parameter),
+        returns basic identification
+        for the membership that the email was sent to (which can then be retrieved in full, if needed,
+        via other api endpoints)
     parameters:
     - name: hash
-      description: "Identifier of an email, comprising up to 40 hexadecimal digits.\
-        \ You would obtain this from a link (typically in a query parameter) provided\
-        \ to someone via a Cameo template,  as supplied by\r\nthe `{insert: view in\
-        \ browser link}` or `{insert: view in browser url}` template substitutions"
+      description: |
+        Identifier of an email, comprising up to 40 hexadecimal digits.
+        You would obtain this from a link (typically in a msg query parameter,
+        or as set in Cameo's system preferences) provided
+        to someone via a Cameo template
       schema:
         $ref: '#/components/schemas/qp-uidhash'
       in: query
       required: true
     - name: currentonly
-      description: When set to `current` produces an error if the member is not a
-        current member
+      description: |
+        When set to `current` produces an error if the member is not a current member
       schema:
         $ref: '#/components/schemas/qp-currentonly'
       in: query
       required: false
-  /eventbookings:
-    summary: eventbookings.json
-    description: Given an event number (instance) returns a summary of places already
-      booked for the event
+  /eventbookings.json:
     get:
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -272,10 +294,11 @@ paths:
                     booked:
                       Stalls: 112
                       Balcony: 31
-          description: |-
+          description: |
             Success
 
-            The list of bookings is keyed by place, which for allocated seating is the seat number (for which the value will always be 1), and for unallocated, is the area of the venue, with the number booked.
+            The list of bookings is keyed by place, which for allocated seating is the seat number (for which
+            the value will always be 1), and for unallocated, is the area of the venue, with the number booked.
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -288,38 +311,44 @@ paths:
               examples:
                 "400":
                   value: instance is not an integer
-          description: missing or invalid instance
+          description: |
+            missing or invalid instance
       operationId: eventbookings
-      summary: eventbookings.json
-      description: Given an event number (instance) returns a summary of places already
-        booked for the event
+      summary: obtain bookings made for an event given its identifying number
+      description: |
+        Given an event number (aka instance) returns a summary of places already booked for the event
     parameters:
     - name: instance
-      description: The event number of an occurrence of an event (find this in the
-        reservations or events sections for the event)
+      description: |
+        The event number of an occurrence of an event (find this in the event details in the
+        box office or events sections)
       schema:
         $ref: '#/components/schemas/qp-instance'
       in: query
       required: true
   /eventinstance.json:
-    summary: eventinstance.json
-    description: Returns the definition of an event occurrence from its instance
     get:
       parameters:
       - examples:
-          "200":
+          "200 (one occurence)":
             value: "123"
-          "200-2":
+          "200 (all occurrences)":
             value: 456+
         name: instance
-        description: |-
-          The number of an event occurrence to retrieve (find the event numbers in the reservations or events section).
+        description: |
+          The number of an event occurrence to retrieve (find the event numbers
+          in the reservations or events section).
 
-          If a simple number is given, and the event has more than one occurrence (for example, multiple performances on different dates) the event will only include the single occurrence identified by the instance. If it is followed by a `+`, then all occurrences of the event will be included.
+          If a simple number is given, and the event has more than one occurrence (for example,
+          multiple performances on different dates) the event will only include the single occurrence
+          identified by the instance. If instance is followed by a `+`,
+          then all occurrences of the event will be included.
         schema:
           $ref: '#/components/schemas/qp-instance'
         in: query
         required: true
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -350,8 +379,9 @@ paths:
                   value: instance should be an integer (optionally followed by +)
           description: Missing or invalid instance
       operationId: eventinstance
-      summary: eventinstance.json
-      description: Returns the definition of an event occurrence from its instance.
+      summary: obtain an event definition from its event number
+      description: |
+        Returns the definition of an event occurrence from its instance.
         Include all occurrences of an event by appending a + to the instance number
         of one of its occurences
     parameters:
@@ -373,10 +403,10 @@ paths:
       in: query
       required: false
   /eventsfilter.json:
-    summary: eventsfilter.json
-    description: A general search for events. Returns an array of events matching
-      the combination of query parameters given
     get:
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -426,16 +456,17 @@ paths:
                     tags:
                     - Test
                     informationdetails: |
-                      <div class='cameo_eventlisting_event_details'>
-                      <div class='cameo_eventlisting_venue'>Fordcam Cinema</div>
-                      <div class='cameo_eventlisting_datetimes'></div><div class='cameo_eventlisting_datetimes'><span class='cameo_eventlisting_date'>Wed 1 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span> &amp;  <span class='cameo_eventlisting_date'>Thu 2 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span></div> <div class='cameo_eventlisting_prices'><span class="cameo_eventlisting_price">All £10.00</span> <span class="cameo_eventlisting_price">M+G £8.00 (M+G)</span></div>
-                      </div>
+                      <div class='cameo_eventlisting_event_details'|
+                      <div class='cameo_eventlisting_venue'>Fordcam Cinema</div|
+                      <div class='cameo_eventlisting_datetimes'></div><div class='cameo_eventlisting_datetimes'><span class='cameo_eventlisting_date'>Wed 1 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span> &amp;  <span class='cameo_eventlisting_date'>Thu 2 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span></div> <div class='cameo_eventlisting_prices'><span class="cameo_eventlisting_price">All £10.00</span> <span class="cameo_eventlisting_price">M+G £8.00 (M+G)</span></div|
+                      </div|
                     informationbookable: true
                     informationpricerange: £8.00&nbsp;to&nbsp;£10.00
-          description: |-
+          description: |
             Success:
 
-            An array of matching events (each with occurrences filtered to only include those that match, for example by date)
+            An array of matching events (each with occurrences filtered to only include those that match,
+            for example by date)
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -448,18 +479,19 @@ paths:
               examples:
                 "400":
                   value: missing query parameters
-          description: "Missing parameters: at least something must be given as the\
-            \ query"
-      summary: eventsfilter.json
-      description: A general search for events. Returns an array of events matching
-        the combination of query parameters given
+          description: |
+            Missing parameters: at least something must be given as the query
+      summary: general event search
+      description: |
+        A general search for events. Returns an array of events matching the combination of query parameters given
     parameters:
     - examples:
         events:
           value: "Spirited%20Away,Frozen"
       name: events
-      description: "Event name or comma separated list of names of events to search\
-        \ for (if the event name includes a comma, escape it with a backslash)"
+      description: |
+        Event name or comma separated list of names of events to search
+        for (if the event name includes a comma, escape it with a backslash)
       schema:
         type: string
       in: query
@@ -473,6 +505,7 @@ paths:
         - draft
         - public
         - bookable
+        - suspended
         - cancelled
         type: string
       in: query
@@ -480,8 +513,9 @@ paths:
         venues:
           value: Camford%20Cinema
       name: venues
-      description: "Venue name or comma separated list of venues to include (if the\
-        \ venue name contains a comma, escape it with a backslash)"
+      description: |
+        Venue name or comma separated list of venues to include (if the
+        venue name contains a comma, escape it with a backslash)
       schema:
         type: string
       in: query
@@ -489,8 +523,9 @@ paths:
         dates:
           value: "2021-10-06,2021-10-07"
       name: dates
-      description: "Date or comma separated list of dates (not times!) to include.\
-        \ Date should be in ISO format: YYYY-MM-DD"
+      description: |
+        Date or comma separated list of dates (not times!) to include.
+        Date should be in ISO format: YYYY-MM-DD
       schema:
         type: string
       in: query
@@ -507,9 +542,10 @@ paths:
         instances:
           value: "123,456"
       name: instances
-      description: "An event number or comma separated list of event numbers to include.\
-        \ If a number is followed by a plus, then all occurrences of any matchiung\
-        \ event will be included, otherwise just the one with that number."
+      description: |
+        An event number or comma separated list of event numbers to include.
+        If a number is followed by a plus, then all occurrences of any matchiung
+        event will be included, otherwise just the one with that number.
       schema:
         type: string
       in: query
@@ -526,8 +562,9 @@ paths:
         past:
           value: both
       name: past
-      description: "Whether to include past events. If not included, only forthcoming\
-        \ events are returned."
+      description: |
+        Whether to include past events. If not included, only forthcoming
+        events are returned.
       schema:
         enum:
         - "yes"
@@ -554,8 +591,9 @@ paths:
         type: string
       in: query
   /forms.json:
-    description: Lists all forms defined grouped by type
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -566,81 +604,119 @@ paths:
                 "200":
                   value:
                     attendance:
-                    - attendance
-                    - attendance-for-A-Cat-In-Paris
-                    - attendance-for-Test-Online
+                      - attendance
+                      - attendance-for-A-Cat-In-Paris
+                      - attendance-for-Test-Online
                     booking:
-                    - booking-for-A-Cat-In-Paris
-                    - booking-for-An-American-In-Paris
-                    - booking-for-Atonement
-                    - booking-for-Ben-Hur
-                    - booking-for-Bringing-Up-Baby
+                      - booking-for-A-Cat-In-Paris
+                      - booking-for-An-American-In-Paris
+                      - booking-for-Atonement
+                      - booking-for-Ben-Hur
+                      - booking-for-Bringing-Up-Baby
                     calendar:
-                    - calendar
+                      - calendar
                     contact:
-                    - contact
+                      - contact
                     contactus:
-                    - contactus
-                    - contactus2
-                    - request
+                      - contactus
+                      - contactus2
+                      - request
                     email:
-                    - email
+                      - email
                     giftaid:
-                    - giftaid
+                      - giftaid
                     invoice:
-                    - invoice
+                      - invoice
                     join:
-                    - join
+                      - join
                     mailshot:
-                    - mailshot
-                    - mailshot-devwp
-                    - mailshot2
-                    - mailshot3
+                      - mailshot
+                      - mailshot-devwp
+                      - mailshot2
+                      - mailshot3
                     optout:
-                    - optout
+                      - optout
                     payment:
-                    - fundraising
-                    - paymentbalance
+                      - fundraising
+                      - paymentbalance
                     questions:
-                    - Favourite-tree-questionnaire
-                    - favourite-desserts
+                      - Favourite-tree-questionnaire
+                      - favourite-desserts
                     renew:
-                    - renew
+                      - renew
                     status:
-                    - status
+                      - status
                     subscribeone:
-                    - subscribeone
+                      - subscribeone
                     updates:
-                    - updates
+                      - updates
           description: Success
         "401":
           $ref: '#/components/responses/401'
         "500":
           $ref: '#/components/responses/500'
       operationId: forms
-      summary: forms.json
-      description: "Lists names of all forms that have been defined, grouped by form\
-        \ type, or just those of a requested type"
+      summary: list names of available forms
+      description: |
+        Lists names of all forms that have been defined, grouped by form
+        type, or just those of a requested type.
+
+        A typical use might be in implementing a selector for a form to embed in a page.
     parameters:
     - name: type
-      description: Restrict response only to those forms of the type given
+      description: Restrict response only to those forms of the type given (types are those listed in Cameo's form editor for a new form or in its type filter)
+      schema:
+        type: string
+      in: query
+  /formspublished.json:
+    post:
+      tags:
+        - Cameo API
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-forms'
+              examples:
+                "200":
+                  value: "ok"
+          description: Success, just the JSON string "ok"
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      operationId: formspublished
+      summary: tell Cameo where a form is embedded
+      description: |
+        Sets the URL by which Cameo knows the location of the form
+
+        This is set automatically when the page embedding a form is visited.
+        However, this explicit setting allows it to be provided when, for example, the page is published (perhaps
+        detected a hook called by the website on publication)
+        which gives Cameo a head start.
+    parameters:
+    - name: type
+      description: Restrict response only to those forms of the type given (types are those listed in Cameo's form editor for a new form or in its type filter)
       schema:
         type: string
       in: query
   /individuals.json:
-    summary: individuals.json
-    description: Provides the name and photo of each individual
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-individuals'
-          description: |-
+          description: |
             Success
 
-            The individuals array of objects in the response lists the individuals from the identifiewd membership with their name and a data URL for their image photo id (if any) - which can therefore be used as the `src` attribute of an `img` element
+            The individuals array of objects in the response lists the individuals from
+            the identified membership with their name and a data URL for their image photo id
+            (if any) - which can therefore be used as the `src` attribute of an `img` element
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -663,13 +739,16 @@ paths:
                 "400":
                   value: no qrcode
           description: qrcode missing or malformed (should be six uppercase letters)
-      summary: individuals.json
-      description: |-
+      summary: get someone's photo (a data URL)
+      description: |
         Provides the name and photo of each individual.
 
-        The version of Cameo must support photo ids.
+        Photo id must be turned on in Cameo's system preferences.
 
-        This is primarily intended to offer a user interface to check the identity of someone who produces a membershipo card. For example, consider a gym. They scan their card on the door and that pops up their saved photo to cross-check they are the holder of that card (for example that it hasn't been loaned or stolen)
+        This is primarily intended to offer a user interface to check the identity of someone who
+        produces a membershipo card. For example, consider a gym. They scan their card on the
+        door and that pops up their saved photo to cross-check they are the holder of that card
+        (for example that it hasn't been loaned or stolen)
     parameters:
     - name: qrcode
       description: The qrcode of the membership concerned
@@ -678,8 +757,6 @@ paths:
       in: query
       required: true
   /mailinglistapply.json:
-    summary: mailinglistapply.json
-    description: Apply changes to mailing list subscriptions for given individual
     post:
       requestBody:
         content:
@@ -687,6 +764,9 @@ paths:
             schema:
               $ref: '#/components/schemas/request-mailinglistapply'
         required: true
+      tags:
+        - Cameo API
+        - Lists
       responses:
         "200":
           content:
@@ -698,21 +778,22 @@ paths:
           $ref: '#/components/responses/401'
         "500":
           $ref: '#/components/responses/500'
-      summary: mailinglistapply.json
+      summary: adjust someone's list subscriptions
       description: Apply changes to mailing list subscriptions for given individual
   /mailinglistspublic.json:
-    summary: mailinglistspublic.json
-    description: Provides a list of lists available for self-service subscription.
     get:
       parameters:
       - name: list
-        description: |-
+        description: |
           Usally this parameter is not needed: you will usually want to get the full list of available lists.
-          u
+          
           The name of a list to include. If the result is empty, that list either does not exist or is not public.
         schema:
           type: string
         in: query
+      tags:
+        - Cameo API
+        - Lists
       responses:
         "200":
           content:
@@ -721,24 +802,29 @@ paths:
                 $ref: '#/components/schemas/response-mailinglistspublic'
           description: The returned array of public lists
       operationId: mailinglistspublic
-      summary: mailinglistspublic.json
-      description: "provides a list of lists available for self-service subscription\
-        \ (or checks a specific one). Subscription to such a list can then be done\
-        \ by including the list name in the mlsin field for individuals either in\
-        \ a new membership to be imported\r\nor using the mailinglistsubscriptions\
-        \ or mailinglistapply api."
+      summary: obtain brief details of lists available for member subscription
+      description: |
+        Provides a list of lists available for self-service subscription
+        (or checks just the one given by `list`).
+        Subscription to such a list can then be done
+        by including the list name in the `mlsin` field for individuals either in
+        a new membership to be imported or using the `mailinglistsubscriptions`
+        or `mailinglistapply` API endpoints.
   /mailinglistsubscriptions.json:
     summary: mailinglistsubscriptions.json
-    description: Determine and amend list subscriptions for each individual in a membership
-      record identified by qrcode
+    description: |
+      Determine and amend list subscriptions for each individual in a membership record identified by qrcode
     get:
+      tags:
+        - Cameo API
+        - Lists
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-mailinglistsubscriptions'
-          description: Success
+          description: Success. `mlsin` is an array of names of manual lists to which they are subscribed; `mlsout` is an array of names of automatic lists from which they are opted-out.
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -761,23 +847,25 @@ paths:
                 "404":
                   value: membership with qrcode 'ABCDEF' not found
           description: Membership identified by qrcode not found
-      summary: mailinglistsubscriptions.json
-      description: Lists the lists subscribed to by each individual of the identified
-        membership
+      summary: obtain individuals' list subscriptions
+      description: |
+        Lists the lists subscribed to by each individual of the identified membership
     post:
       requestBody:
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/request-mailinglistsubscriptions'
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-mailinglistsubscriptions'
-          description: "Success. The object, as modified, is returned in the same\
-            \ way as GET"
+          description: |
+            Success. The object, as modified, is returned in the same way as GET
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -790,8 +878,9 @@ paths:
               examples:
                 "400":
                   value: malformed mailinglists
-          description: "Something wrong with your request, for example, malformed\
-            \ mailinglists parameter"
+          description: |
+            Something wrong with your request, for example, malformed
+            mailinglists parameter
         "404":
           content:
             text/plain:
@@ -801,9 +890,9 @@ paths:
                 "404":
                   value: membership with qrcode 'ABCDEF' not found
           description: membership identified by qrocde not found
-      summary: mailinglistsubscriptions.json
-      description: Update the list subscription status for the identified membership
-        record
+      summary: update list subscriptions for an individual
+      description: |
+        Update the list subscription status for the identified membership record
     parameters:
     - examples:
         qrcode:
@@ -815,10 +904,9 @@ paths:
       in: query
       required: true
   /membershipnumber.json:
-    summary: membershipnumber.json
-    description: Retrieve limited information about membership record by membership
-      number
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -848,9 +936,10 @@ paths:
                 "400":
                   value: invalid membership number '123x'
           description: Missing or invalid membershipnumber
-      summary: membershipnumber.json
-      description: "Retrieve limited information about membership record by membership\
-        \ number. Includes all membership record types (current, new, old, contact)"
+      summary: obtain membership record by membership number
+      description: |
+        Retrieve limited information about membership record by membership
+        number. Works for all membership record types (current, new, old, contact)
     parameters:
     - examples:
         membershipnumber:
@@ -862,9 +951,9 @@ paths:
       in: query
       required: true
   /qrcode.json:
-    summary: qrcode.json
-    description: Retrieve a membership record by qrcode
     get:
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -884,7 +973,8 @@ paths:
               examples:
                 "400":
                   value: membership with qrcode '$ABCDE' not found
-          description: Missing or invalid qrcode. A qrcode is six uppercase characters.
+          description: |
+            Missing or invalid qrcode. A qrcode is six uppercase characters.
         "404":
           content:
             text/plain:
@@ -894,7 +984,7 @@ paths:
                 "404":
                   value: membership with qrcode 'ABCDEF' not found
           description: Membership record with given qrcode not found
-      summary: qrcode.json
+      summary: obtain membership record by qrcode
       description: Retrieve a membership record by qrcode
     parameters:
     - name: qrcode
@@ -902,11 +992,12 @@ paths:
         uppercase letters.
       schema:
         type: string
+      examples:
+        qrcode:
+          ABCDEF
       in: query
       required: true
   /reservationcancel.json:
-    summary: reservationcancel.json
-    description: Cancel a booking reservation for an event given its booking number.
     post:
       requestBody:
         content:
@@ -914,6 +1005,9 @@ paths:
             schema:
               $ref: '#/components/schemas/request-reservationcancel'
         required: true
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -943,17 +1037,21 @@ paths:
                 "404":
                   value: booking 3456 not found
           description: Booking with gfiven reference not found
-      summary: reservationcancel.json
-      description: Cancel a booking reservation for an event given its booking number.
+      summary: cancel a booking from its reference
+      description: |
+        Cancel a booking reservation for an event given its booking reference number.
+
+        Typical use is in implementing a booking form if Cameo's form provided can't be used.
   /reservationfinalise.json:
-    summary: reservationfinalise.json
-    description: Finalise a provisional reservation.
     post:
       requestBody:
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/request-reservationfinalise'
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -973,7 +1071,8 @@ paths:
               examples:
                 "400":
                   value: reference must be an integer
-          description: "One of the parameters is missing when needed, or invalid"
+          description: |
+            One of the parameters is missing when needed, or invalid
         "404":
           content:
             text/plain:
@@ -983,20 +1082,31 @@ paths:
                 "404":
                   value: no such booking ref 3456
           description: Booking with given reference number not found
-      summary: reservationfinalise.json
-      description: |-
-        Finalise a provisional reservation. When someone books a place at an event, it should be provisionally reserved (using `/reservation.json`) until they have provided their contact details and, where charged, have completed payment. That reserves the places for 20 minutes (or whatever other time is specified) so that someone else can't take the place while they are paying. Once paid, finalise the reservation by providing the missing details here.
+      summary: finalise a provisional reservation from its reference
+      description: |
+        Finalise a provisional reservation.
 
-        If the `email` belongs to an existing member, the booking will be made in their name (linked to their record), otherwise a new contact will be created to hold the contact details.
+        Typical use is in implementing a booking form if Cameo's form provided can't be used.
+
+        When someone books a place at an event,
+        it should be provisionally reserved (using `/reservation.json`) until they have provided
+        their contact details and, where charged, have completed payment. That reserves the
+        places for 20 minutes (or whatever other time is specified) so that someone else
+        can't take the place while they are paying. Once paid, finalise the reservation by
+        providing the missing details here.
+
+        If the `email` belongs to an existing member, the booking will be made in their
+        name (linked to their record), otherwise a new contact will be created to hold the contact details.
   /reservation.json:
-    summary: reservation.json
-    description: Make a provisional booking for an event.
     post:
       requestBody:
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/request-reservation'
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -1026,8 +1136,8 @@ paths:
               examples:
                 "400":
                   value: reservations must be an array
-          description: "One of the parameters required is missing, or a parameter\
-            \ is invalid "
+          description: |
+            One of the parameters required is missing, or a parameter is invalid
         "409":
           content:
             text/plain:
@@ -1036,20 +1146,31 @@ paths:
               examples:
                 "409":
                   value: no spaces available
-          description: "Someone else made a (provisional) booking for the same place\
-            \ at the same time (that is between offering the places and the customer\
-            \ selecting them), and they won the race."
-      summary: reservation.json
-      description: Make a provisional booking for an event.
+          description: |
+            Someone else made a (provisional) booking for the same place
+            at the same time (that is between offering the places and the customer
+            selecting them), and they won the race.
+      summary: make a provisional booking for an event
+      description: |
+        Make a provisional booking for an event. This reserves the 
+        place while you take payment. Once completed, you should 
+        finalise the reservation with `reservationfinalise`.
+
+        Typical use is in implementing a booking form if Cameo's form provided can't be used.
+
+        If they don't complete the booking within the time given,
+        Cameo will cancel the reservation.  If you then try to
+        finalise, it may still succeed if places are available.
+        Otherwise, you should send an alert for manual intervention.
   /sendnotification.json:
-    summary: sendnotification.json
-    description: Posts a notification message (to alert Cameo users to something)
     post:
       requestBody:
         content:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/request-sendnotification'
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -1073,12 +1194,10 @@ paths:
                   value: "one of the membership numbers 1234,5678 does not exist"
           description: One of the parameters is missing or invalid
       operationId: sendnotification
-      summary: sendnotification.json
-      description: Posts a notification message (to alert Cameo users to something)
+      summary: send a notification
+      description: |
+        Posts a notification message (to alert Cameo users to something)
   /sendtemplate.json:
-    summary: sendtemplate.json
-    description: Sends one or more emails via either a nominated template or one servicing
-      a given form task.
     post:
       requestBody:
         content:
@@ -1086,6 +1205,8 @@ paths:
             schema:
               $ref: '#/components/schemas/request-sendtemplate'
         required: true
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
@@ -1103,15 +1224,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-sendtemplate-error'
-          description: |-
+          description: |
             Many possible errors, as indicated by the `error` element.
 
-            In addition to returning an eror response, a notification is also posted, so you get to know if an email cannot be sent when used in production.
-      summary: sendtemplate.json
-      description: Sends one or more emails via either a nominated template or one
+            In addition to returning an eror response, a notification is also posted, so you get to know
+            if an email cannot be sent when used in production.
+      summary: merge email from template and send it
+      description: |
+        Sends one or more emails via either a nominated template or one
         servicing a given form task.
   /status.json:
-    summary: status.json
     get:
       parameters:
       - name: qrcode
@@ -1119,14 +1241,24 @@ paths:
         schema:
           type: string
         in: query
+      tags:
+        - Cameo API
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-status'
-          description: "Success. Note that in this case a membership not found is\
-            \ still a 200 response, but indicated in the status returned."
+          description: |
+            Success. Note that in this case a membership not found is
+            still a 200 response, but indicated in the status returned.
+
+            Possible status values:
+            - `current`: the code identifies a current paying member
+            - `contact`: the code identifies a contact (non-paying)
+            - `expired`: the code belongs to a member whose membership has expired
+            - `cancelled`: the code did belong to a member, but it has been replaced
+            - `doesnotexist`: there is no membership record with that code
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -1141,25 +1273,32 @@ paths:
                   value: no qrcode
           description: Qrcode parameter missing or invalid (should be six uppercase
             letters)
-      summary: status.json
-      description: "Looks up a membership by qrcode to determine their status. This\
-        \ allows you to offer a qrcode scan of a membership card encoding their barcode,\
-        \ and to show their status in response, so if, for example, someone presents\
-        \ a membership card to obtain a discount, the seller can check it is valid,\
-        \ without them obtaining any informaiton other than that."
+      summary: obtain membership status from qrcode
+      description: |
+        Looks up a membership by qrcode to determine their status.
+        
+
+        This allows you to offer a qrcode scan of a membership card encoding their barcode,
+        and to show their status in response, so if, for example, someone presents
+        a membership card to obtain a discount, the seller can check it is valid,
+        without them obtaining any informaiton other than that.
   /venuenames.json:
-    summary: venuenames.json
     get:
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-venuenames'
-          description: "The public names of the requested venues, organised as an\
-            \ object keyed by requeste names and values the corresponding public names.\
-            \ If a venue does not exist it will not be included in the returned object\
-            \ (which can, therefore, be empty)"
+          description: |
+            The public names of the requested venues, organised as an
+            object keyed by requeste names and values the corresponding public names.
+            
+            If a venue does not exist it will not be included in the returned object
+            (which can, therefore, be empty)
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -1174,22 +1313,29 @@ paths:
                   value: missing venues
           description: Missing or invalid `venues`
       operationId: venuenames
-      summary: venuenames.json
-      description: Returns the public names of venues requested
+      summary: obtain public venue names from private venue names
+      description: |
+        Returns the public names of venues from their private names
+        (these are the same if a venue does not include an explicit public name).
+
+        Public names allow you to define multiple venues according to their configuration which are
+        actually the same place and are known by the same name form the public point of view.
     parameters:
     - examples:
         venues:
           value: Camford cinema raked seating
       name: venues
-      description: "The names of venues for whioch public names are required, a list\
-        \ separated by `|`"
+      description: |
+        The names of venues for which public names are required, a list
+        separated by `|`
       schema:
         type: string
       in: query
   /venue.json:
-    summary: venue.json
-    description: Definition of the venue requested including all its price plans.
     get:
+      tags:
+        - Cameo API
+        - Events and bookings
       responses:
         "200":
           content:
@@ -1220,13 +1366,18 @@ paths:
         "500":
           $ref: '#/components/responses/500'
       operationId: venue
-      summary: venue.json
-      description: |-
+      summary: obtain venue description from its name
+      description: |
         Definition of the venue requested including all its price plans.
 
-        The result is complex. Fundamentally, a venue can have allocated or unallocated places (numbered seats or general areas just with capacities). Each area (whether allocated or not) has a price zone. Each price zone is described in one or more pricing plans, with tickets being priced by zone and category (such as Adult and Child), where categories may have conditions (such as _must be a member_ to purchase).
+        The result is complex. Fundamentally, a venue can have allocated or unallocated places
+        (numbered seats or general areas just with capacities). Each area (whether allocated or not)
+        has a price zone. Each price zone is described in one or more pricing plans, with tickets being
+        priced by zone and category (such as Adult and Child), where categories may have conditions
+        (such as _must be a member_ to purchase).
 
-        Along with an event from `eventsfilter.json`, this gives you sufficient data to implement a booking form or process, though the detail needs lots more documentation.
+        Along with an event from `eventsfilter.json`, this gives you sufficient data to implement a
+        booking form or process, though the detail needs lots more documentation.
     parameters:
     - examples:
         venue:
@@ -1241,7 +1392,8 @@ components:
   schemas:
     response-displayemail:
       title: Root Type for response-displayemail
-      description: "Email date (ISO time stamp), subject (text) and content (html)"
+      description: |
+        Email date (ISO time stamp), subject (text) and content (html)
       type: object
       properties:
         date:
@@ -1253,7 +1405,7 @@ components:
       example:
         date: 2018-07-12T12:37:00BST
         subject: subject line of the email
-        content: <p>content of the email in HTML.</p>
+        content: <p>content of the email in HTML.</p|
     response-allocatemembershipnumber:
       title: Root Type for allocatemembershipnumber
       description: response to allocatemembershipnumber endpoint
@@ -1267,8 +1419,12 @@ components:
         membershipnumber: 1001
     response-contact:
       title: Root Type for contact
-      description: ""
-      type: object
+      description: |
+        a JSON object with a membership information, as follows; where
+        available, local government area codes for representatives' local government
+        area (`contactbody` and `contactarea`), for any contact type which is
+        marked as 'political', is provided in an element`government`, including
+        some or all of `mapitid`, `ons` and `gss` codes      type: object
       properties:
         type:
           type: string
@@ -1364,16 +1520,17 @@ components:
       type: string
       example: ABCDE2
     qp-uidhash:
-      description: "Identifier of an email, comprising up to 40 hexadecimal digits.\
-        \ You would obtain this from a link (typically in a query parameter) provided\
-        \ to someone via a Cameo template,  as supplied by\r\nthe `{insert: view in\
-        \ browser link}` or `{insert: view in browser url}` template substitutions"
+      description: |
+        Identifier of an email, comprising up to 40 hexadecimal digits.
+        You would obtain this from a link (typically in a query parameter) provided
+        to someone via a Cameo template,  as supplied by
+        the `{insert: view in browser link}` or `{insert: view in browser url}` template substitutions
       type: string
       example: 02b17aee67c0a835df922306cd56a668
     response-discounts:
       title: Root Type for response-discounts
-      description: "Objects useful for populating a page listing\r\nestablishments\
-        \ which offer discounts to members."
+      description: |
+        Objects useful for populating a page listing establishments which offer discounts to members.
       type: array
       items:
         type: object
@@ -1721,7 +1878,7 @@ components:
           type: integer
           example: "1234"
         email:
-          description: Email address of the individual within the membership recordidentified
+          description: Email address of the individual within the membership record identified
             by membershipnumber to apply changes to
           type: string
           example: jane%40doe.com
@@ -1736,8 +1893,9 @@ components:
           type: string
           example: completed subscription form
         contact:
-          description: "`yes` or `no`. When `yes`, they can be opted in to a list,\
-            \ but otherwise, they will only be opted-out whatever their current status."
+          description: |
+            `yes` or `no`. When `yes`, they can be opted in to
+            a list, but otherwise, they will only be opted-out whatever their current status.
           enum:
           - "yes"
           - "no"
@@ -1779,7 +1937,7 @@ components:
     response-mailinglistsubscriptions:
       title: Root Type for response-mailinglistsubscriptions
       description: List of lists subscribed to for each individual of an identified
-        membership record
+        membership record, each list comprising...
       type: array
       items:
         type: object
@@ -1816,18 +1974,21 @@ components:
       properties:
         mailinglists:
           $ref: '#/components/schemas/response-mailinglistsubscriptions'
-          description: "The same as the object returned by GET, modified as needed"
+          description: |
+            The same as the object returned by GET, modified as needed
         list:
-          description: In conjunction ith `reason` records a reason why the change
+          description: |
+            In conjunction with `reason` records a reason why the change
             was made - this allows you to implement a "please why you are opting out
             from this mailing list". This does not affect which lists the changes
             in the mailinglists object affect.
           type: string
           example: Photographers
         reason:
-          description: In conjunction ith `list` records a reason why the change was
-            made - this allows you to implement a "please why you are opting out from
-            this mailing list"
+          description: |
+            In conjunction ith `list` records a reason why the change was
+            made - this allows you to implement
+            "please say why you are opting out from this mailing list"
           type: string
           example: No time to read the mailings
     response-membership:
@@ -2013,13 +2174,15 @@ components:
           type: string
           example: email
         email:
-          description: "The email address of the customer. Required if ticketpreference\
-            \ is `email`, otherwise optional."
+          description: |
+            The email address of the customer. Required if ticketpreference
+            is `email`, otherwise optional.
           type: string
           example: jane%40doe.com
         postcode:
-          description: "The postcode of the customer. Required if `ticketpreference`\
-            \ is `letter`, otherwise optional."
+          description: |
+            The postcode of the customer. Required if `ticketpreference`
+            is `letter`, otherwise optional.
           type: string
           example: BS1%204DD
         phone:
@@ -2027,14 +2190,16 @@ components:
           type: string
           example: 07700 123456
         body:
-          description: "The name of the group, organisation or company that the booking\
-            \ is being made for. (This would be used, for example, if producing lanyard\
-            \ badges for a conference)"
+          description: |
+            The name of the group, organisation or company that the booking
+            is being made for. (This would be used, for example, if producing lanyard
+            badges for a conference)
           type: string
           example: Bristol City Council
         role:
-          description: "The role or job title of the customer. (This would be used,\
-            \ for example, on lanyard badges for a conference booking)"
+          description: |
+            The role or job title of the customer. (This would be used,
+            for example, on lanyard badges for a conference booking)
           type: string
           example: Chief Executive Officer
     response-reservationfinalise:
@@ -2131,10 +2296,14 @@ components:
         _id: 27J1MnwBDpgFeT0Kl1jW
         _is: bookings
     request-reservation:
-      description: |-
-        Make a provisional reservation (event booking). (Finalise the reserveation using `reservationfinalise.json`)
+      description: |
+        Make a provisional reservation (event booking).
+        (Finalise the reserveation using `reservationfinalise.json`)
 
-        Provisional reservaiton prevents someone else booking the same places while the customer enters their details and makes payment. The provisional booking expires after the interval given by `expiry` (or 20 minutes by default), after which you can still complete the reservation provided no one else has reserved any of the same places (or the event is sold out) in the meantime.
+        Provisional reservaiton prevents someone else booking the same places while the customer enters
+        their details and makes payment. The provisional booking expires after the interval given by
+        `expiry` (or 20 minutes by default), after which you can still complete the reservation
+        provided no one else has reserved any of the same places (or the event is sold out) in the meantime.
       required:
       - instance
       - reservations
@@ -2151,15 +2320,15 @@ components:
           example: "30"
         reservations:
           $ref: '#/components/schemas/request-reservations-reservation'
-          description: "The JSON-encoded list of reservations to provisionally book.\
-            \ An error will be returned if the seats are taken, the area is sold out,\
-            \ etc."
+          description: |
+            The JSON-encoded list of reservations to provisionally book.
+            An error will be returned if the seats are taken, the area is sold out, etc.
     request-reservations-reservation:
       title: Root Type for request-reservations-reservation
-      description: "JSON-encoded array of reservations. Each reservation shows the\
-        \ place (seat number for allocated seating, or area for unallocated) and category\
-        \ (for example, Adult or Child, accroding to the venue's price plan for the\
-        \ event)."
+      description: |
+        JSON-encoded array of reservations. Each reservation shows the
+        place (seat number for allocated seating, or area for unallocated) and category
+        (for example, Adult or Child, accroding to the venue's price plan for the event).
       type: array
       items:
         type: object
@@ -2175,9 +2344,10 @@ components:
         category: all
     response-reservation:
       title: Root Type for response-reservation
-      description: "The provisional booking made. Note the reference number, which\
-        \ can be used to later finalise or cancel the booking (with `reservationfinalise.json`\
-        \ or `reservationcancel.json` respectively)"
+      description: |
+        The provisional booking made. Note the reference number, which
+        can be used to later finalise or cancel the booking (with `reservationfinalise.json`
+        or `reservationcancel.json` respectively)
       type: object
       properties:
         date:
@@ -2278,32 +2448,37 @@ components:
           type: string
           example: Don't forget to buy carrots
         content:
-          description: "The HTML content of the message. Note: the content is sanitised\
-            \ before being stored: you cannot include JavaScript elements in the content,\
-            \ for example."
+          description: |
+            The HTML content of the message. Note: the content is sanitised
+            before being stored: you cannot include JavaScript elements in the content,
+            for example.
           type: string
-          example: <p>You'll need carrots for the visit to the zoo next week</p>
+          example: <p>You'll need carrots for the visit to the zoo next week</p|
         membershipnumbers:
-          description: "An optional, comma and/or space-separtated list of membership\
-            \ numbers to wqhich the notification refers. The corresponding membership\
-            \ records must exist!"
+          description: |
+            An optional, comma and/or space-separated list of membership
+            numbers to which the notification refers. The corresponding membership
+            records must exist!
           type: string
           example: "1234, 1238"
         tags:
-          description: "An optional, space and/or comma separated list of tags to\
-            \ apply to the nbotification. Tags control who gets emailed copies of\
-            \ the message."
+          description: |
+            An optional, space and/or comma separated list of tags to
+            apply to the nbotification. Tags control who gets emailed copies of
+            the message.
           type: string
           example: EventReminder
         date:
-          description: "The date on which the notification should be posted. This\
-            \ must be today (in which case it is posted immediately) or in the future.\
-            \ Default is today. Date can be in any reasonable format, including relative\
-            \ (e.g. `tomorrow`)"
+          description: |
+            The date on which the notification should be posted. This
+            must be today (in which case it is posted immediately) or in the future.
+            Default is today. Date can be in any reasonable format, including relative
+            (e.g. `tomorrow`)
           type: string
           example: tomorrow
         by:
-          description: Who is making the post. Will be preceded by "form ". Defaulots
+          description: |
+            Who is making the post. Will be preceded by "form ". Defaults
             to "Cameo" if not given.
           type: string
           example: Reminder
@@ -2318,52 +2493,62 @@ components:
       type: object
       properties:
         template:
-          description: "Name of a specific template to merge with. One of `template`,\
-            \ `task`, or `audience` must be given"
+          description: |
+            Name of a specific template to merge with. One of `template`,
+            `task`, or `audience` must be given
           type: string
           example: mailshot
         task:
-          description: "Name of a task which identifies a template to merge with.\
-            \ One of `template`, `task`, or `audience` must be given"
+          description: |
+            Name of a task which identifies a template to merge with.
+            One of `template`, `task`, or `audience` must be given
           type: string
         audience:
-          description: "Name of list which replaces the audience of the nominated\
-            \ template. One of `template`, `task`, or `audience` must be given"
+          description: |
+            Name of list which replaces the audience of the nominated
+            template. One of `template`, `task`, or `audience` must be given
           type: string
         to:
-          description: "When `audience` not supplied - individually chosen template\
-            \ or services form, for example, sends the message to this explicit address.\
-            \ Can either be an email address or `name<email>`. No membership record\
-            \ need exist in order to send email like this."
+          description: |
+            When `audience` not supplied - individually chosen template
+            or services form, for example, sends the message to this explicit address.
+            Can either be an email address or `name<email>`. No membership record
+            need exist in order to send email like this.
           type: string
-          example: Jane Doe<jane@doe.com>
+          example: Jane Doe<jane@doe.com|
         email:
-          description: Identifies by email address an individual with an existing
+          description: |
+            Identifies by email address an individual with an existing
             membership record to send to. This means the other data from the record
             can be substituted.
           type: string
           example: jane@doe.com
         qrcode:
-          description: Identifies by qrcode an individual with an existing membership
+          description: |
+            Identifies by qrcode an individual with an existing membership
             record to send to. This means the other data from the record can be substituted.
             Qrcode comprises six uppercase letters.
           type: string
         membershipnumber:
-          description: Identifies by membership number all the individuals in an existing
+          description: |
+            Identifies by membership number all the individuals in an existing
             membership record to send to. This means the other data from the record
             can be substituted. This is just like using `individually chosen` from
             Cameo.
           type: string
           example: "1234"
         membershiprecord:
-          description: "Supplies a memberhsip record to whom to send. This just saves\
-            \ looking it up if you already have it, and substitutions can be made\
-            \ from it."
+          description: |
+            Supplies a membership record to whom to send. This just saves
+            looking it up if you already have it, and substitutions can be made
+            from it.
           type: string
         substitutions:
-          description: |-
-            JSON object containing call-specific substitutions to be made into the template. These will be substituted by {form: _sub_} substitutions, where _sub_ is the key into this object. Substitutions are plain text.
-
+          description: |
+            JSON object containing call-specific substitutions to be made into the template.
+            These will be substituted by {form: _sub_} substitutions, where _sub_ is the key
+            into this object. Substitutions are plain text.
+            
             For example, if tis object is
              {
                  "who": "Jane Doe"
@@ -2371,22 +2556,24 @@ components:
              }
             then the template will substitute `{form: who}` with "Jane Doe"
           type: string
-          example: |-
+          example: |
             {
                 "who": "Jane Doe"
                 "when": "yesterday"
             }
         urgent:
-          description: "If given and not empty, email will be sent immediately, otherwise\
-            \ will be queued for sending in a few minutes"
+          description: |
+            If given and not empty, email will be sent immediately, otherwise
+            will be queued for sending in a few minutes
           type: string
           example: "yes"
     response-sendtemplate-ok:
       title: Root Type for response-sendtemplate-ok
-      description: |-
+      description: |
         Acknowledges sending of the messages.
 
-        `status` is "ok" on success and "error" on failure. On error, a further fioeld is included, `error`: the text of the error message
+        `status` is "ok" on success and "error" on failure. On error, a further fioeld is included,
+        `error: the text of the error message
       required:
       - status
       type: object
@@ -2411,9 +2598,10 @@ components:
         error: email address jane@doe.com not found
     response-sendtemplate-ok-object:
       title: Root Type for response-template-ok-object
-      description: "Possible success responses to `sendtemplate.json`. `pending` is\
-        \ the usual response. `sent` means the message is on its way, which happens\
-        \ when `urgent` is given"
+      description: |
+        Possible success responses to `sendtemplate.json`. `pending` is
+        the usual response. `sent` means the message is on its way, which happens
+        when `urgent` is given
       required:
       - success
       type: object
@@ -2434,11 +2622,12 @@ components:
         status:
           description: |
             the status of the qiven code:
-            `current`: the code identifies a current paying member
-            `contact`: the code identifies a contact (non-paying)
-            `expired`: the code belongs to a member whose membership has expired
-            `cancelled`: the code did belong to a member, but it has been replaced because their card was lost or stolen
-            `doesnotexist`: there is no membership record with that code
+            - `current`: the code identifies a current paying member
+            - `contact`: the code identifies a contact (non-paying)
+            - `expired`: the code belongs to a member whose membership has expired
+            - `cancelled`: the code did belong to a member, but it has been replaced because their card was
+              lost or stolen
+            - `doesnotexist`: there is no membership record with that code
           enum:
           - doesnotexist
           - expired
@@ -2448,7 +2637,8 @@ components:
           type: string
     response-venuenames:
       title: Root Type for response-venuenames
-      description: Lists the public names of venues as an object keyed by internal
+      description: |
+        Lists the public names of venues as an object keyed by internal
         name and value the corresponding public name (which may be the same)
       type: object
       properties:
@@ -2628,7 +2818,7 @@ components:
     BasicAuth:
       scheme: basic
       type: http
-      description: |-
+      description: |
         Authentication is by BasicAuth, as in https://USER:PASSWORD@server/api/endpoint...
         Obtain these from the API Keys section in Cameo. These are not your regular Cameo login!
 
