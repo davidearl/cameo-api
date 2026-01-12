@@ -1,0 +1,2635 @@
+---
+openapi: 3.0.2
+info:
+  title: Cameo
+  version: 1.0.0
+  description: https://cameo-membership.uk
+  contact:
+    name: Cameo Administrator
+    url: https://cameo-membership.uk
+    email: admin@cameo-membership.uk
+paths:
+  /allocatemembershipnumber.json:
+    summary: allocatemembershipnumber
+    description: "To allocate a new, unique membership number, for example to use\
+      \ in a membership form."
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-allocatemembershipnumber'
+          description: "Correctly obtaned a new, unique membership number"
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      security:
+      - BasicAuth: []
+      operationId: allocatemembershipnumber
+      summary: allocatemembershipnumber.json
+      description: "To allocate a new, unique membership number, for example to use\
+        \ in a membership form.\r\n\r\nNote that it is possible to preallocate a pool\
+        \ of unused membership\r\nnumbers for use on occasions when the API cannot\
+        \ be accessed for\r\nwhatever reason.\r\n\r\nIt is important that membership\
+        \ numbers are uniquely\r\nallocated. For this reason, the allocation is done\
+        \ in a critical\r\nsection so that two nearly-simultaneous requests cannot\
+        \ accidentally\r\nallocate the same number."
+  /contact.json:
+    summary: contact
+    description: "Returns limited information about a membership with the given qrcode.\r\
+      \n\r\nPlease do not disclose the membership number in any pages displayed as\r\
+      \na result, and be careful with other information, so that probes for\r\ndata\
+      \ won't be helpful.\r\n\r\nVery similar to /email.json and /qrcode.json\r\n\r\
+      \nNote: as this is a new API call, there is no legacy type field, only\r\n_type,\
+      \ but in any case type can only be 'contact'."
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-contact'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "404":
+          content:
+            text/plain:
+              examples:
+                "404":
+                  value: membership with qrcode 'ABCDE2' not found
+          description: No contact with the provided qrcode exists
+        "400":
+          content:
+            text/plain:
+              examples:
+                "400":
+                  value: no qrcode
+          description: Either qrocde is missing or is not in the required format
+      summary: contact.json
+      description: "a JSON object with a membership information, as follows;\r\nwhere\
+        \ available, local government area codes for representatives'\r\nlocal government\
+        \ area (`contactbody` and `contactarea`), for any\r\ncontact type which is\
+        \ marked as 'political', is provided in an element\r\n`government`, including\
+        \ some or all of `mapitid`, `ons` and `gss`\r\ncodes:"
+    parameters:
+    - examples:
+        qrcode:
+          value: ABCDE2
+      name: qrcode
+      description: ""
+      schema:
+        $ref: '#/components/schemas/qp-qrcode'
+      in: query
+      required: true
+  /displayemail.json:
+    summary: displayemail.json
+    description: "Returns date, subject and content of a personalised email (as prepared\r\
+      \nby merging an email template), so that you can implement a \"view email\r\n\
+      in browser\" link at the top of emails."
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-displayemail'
+          description: success
+        "400":
+          content:
+            text/plain:
+              examples:
+                "400":
+                  value: no id
+          description: id parameter missing
+        "404":
+          content:
+            text/plain:
+              examples:
+                "404":
+                  value: No such email '02b17aee67c0a835df922306cd56a668'
+          description: email with id not found
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      summary: displayemail.json
+      description: "Returns date, subject and content of a personalised email (as\
+        \ prepared\r\nby merging an email template), so that you can implement a \"\
+        view email\r\nin browser\" link at the top of emails."
+    parameters:
+    - name: id
+      description: ""
+      schema:
+        $ref: '#/components/schemas/qp-uidhash'
+      in: query
+      required: true
+  /discounts.json:
+    summary: discounts.json
+    description: Information with which to create a page listing establishements offering
+      member discounts
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-discounts'
+          description: |-
+            Success.
+
+            A JSON array of objects useful for populating a page listing
+            establishments which offer discounts to members. Each would be a contact which has the _Members’ discount offered_
+            box ticked in the contact record.
+
+            Don't rely on any of the fields shown in the example being present. There may also be an
+            `address2` field. The location, if given, may be useful for showing
+            where they are on a map.
+
+            `discountdetails` may be an empty string.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      operationId: discounts
+      summary: discounts.json
+      description: |-
+        Information with which to create a page listing establishements offering member discounts.
+
+        Please cache the result and arrange to update at intervals, for example daily. This avoids putting load on Cameo by making the request every time someone visits your listings page.
+  /email.json:
+    summary: email.json
+    description: Returns a membership record by email address
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-email'
+          description: |-
+            Success.
+
+            Membership record returned
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          description: Something went wrong
+        "400":
+          content:
+            text/plain:
+              examples:
+                "400":
+                  value: no email
+          description: Missing or invalid email address given
+        "404":
+          content:
+            text/plain:
+              examples:
+                "404":
+                  value: membership with email 'jane@doe.com' not found
+          description: No membership with that email address exists
+      operationId: email
+      summary: email.json
+      description: Retrieves a subset of the membership record for which one individual
+        has the given (primary) email address.
+    parameters:
+    - name: email
+      description: The email address of the membership record to retrieve
+      schema:
+        $ref: '#/components/schemas/qp-email'
+      in: query
+      required: true
+  /emailinfo.json:
+    summary: emailinfo.json
+    description: "Given an email address, returns basic identification for a membership\
+      \ (which can then be retrieved in full, if needed, via other api endpoints)"
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-emailinfo'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              examples:
+                "400":
+                  value: Missing hash
+          description: "Missing or invalid hash, not a current member when currentonly\
+            \ is set"
+        "404":
+          content:
+            text/plain:
+              examples:
+                "404":
+                  value: No such email
+          description: Email with given hash not found
+      operationId: emailinfo
+      summary: emailinfo.json
+      description: "Given an email identifier (uid hash), returns basic identification\
+        \ for a membership (which can then be retrieved in full, if needed, via other\
+        \ api endpoints)"
+    parameters:
+    - name: hash
+      description: "Identifier of an email, comprising up to 40 hexadecimal digits.\
+        \ You would obtain this from a link (typically in a query parameter) provided\
+        \ to someone via a Cameo template,  as supplied by\r\nthe `{insert: view in\
+        \ browser link}` or `{insert: view in browser url}` template substitutions"
+      schema:
+        $ref: '#/components/schemas/qp-uidhash'
+      in: query
+      required: true
+    - name: currentonly
+      description: When set to `current` produces an error if the member is not a
+        current member
+      schema:
+        $ref: '#/components/schemas/qp-currentonly'
+      in: query
+      required: false
+  /eventbookings:
+    summary: eventbookings.json
+    description: Given an event number (instance) returns a summary of places already
+      booked for the event
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-eventbookings'
+              examples:
+                "200":
+                  value:
+                    booked:
+                      Stalls: 112
+                      Balcony: 31
+          description: |-
+            Success
+
+            The list of bookings is keyed by place, which for allocated seating is the seat number (for which the value will always be 1), and for unallocated, is the area of the venue, with the number booked.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: instance is not an integer
+          description: missing or invalid instance
+      operationId: eventbookings
+      summary: eventbookings.json
+      description: Given an event number (instance) returns a summary of places already
+        booked for the event
+    parameters:
+    - name: instance
+      description: The event number of an occurrence of an event (find this in the
+        reservations or events sections for the event)
+      schema:
+        $ref: '#/components/schemas/qp-instance'
+      in: query
+      required: true
+  /eventinstance.json:
+    summary: eventinstance.json
+    description: Returns the definition of an event occurrence from its instance
+    get:
+      parameters:
+      - examples:
+          "200":
+            value: "123"
+          "200-2":
+            value: 456+
+        name: instance
+        description: |-
+          The number of an event occurrence to retrieve (find the event numbers in the reservations or events section).
+
+          If a simple number is given, and the event has more than one occurrence (for example, multiple performances on different dates) the event will only include the single occurrence identified by the instance. If it is followed by a `+`, then all occurrences of the event will be included.
+        schema:
+          $ref: '#/components/schemas/qp-instance'
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-event'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: instance 123 not found
+          description: Missing or invalid instance
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: instance should be an integer (optionally followed by +)
+          description: Missing or invalid instance
+      operationId: eventinstance
+      summary: eventinstance.json
+      description: Returns the definition of an event occurrence from its instance.
+        Include all occurrences of an event by appending a + to the instance number
+        of one of its occurences
+    parameters:
+    - name: instance
+      description: The number of an event occurrence to retrieve (finds the event
+        numbers in the reservations or events section)
+      schema:
+        $ref: '#/components/schemas/qp-instance'
+      in: query
+      required: true
+    - examples:
+        bookable:
+          value: "yes"
+      name: bookable
+      description: If any value is given for `bookable` an event is only returned
+        if it is bookable
+      schema:
+        type: boolean
+      in: query
+      required: false
+  /eventsfilter.json:
+    summary: eventsfilter.json
+    description: A general search for events. Returns an array of events matching
+      the combination of query parameters given
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/response-event'
+              examples:
+                "200":
+                  value:
+                  - name: Spirited Away
+                    type: event
+                    datefirst: 2021-12-01
+                    status: bookable
+                    occurrences:
+                    - occurrencename: "1"
+                      status: bookable
+                      datefirst: 2021-12-01
+                      days:
+                      - date: 2021-12-01
+                        daystart: 70200
+                        dayend: 75600
+                      priceplan: prices for Spirited Away
+                      venue: Fordcam Cinema
+                      instance: 786
+                      soldout: false
+                    - occurrencename: "2"
+                      status: bookable
+                      datefirst: 2021-12-02
+                      days:
+                      - date: 2021-12-02
+                        daystart: 70200
+                        dayend: 75600
+                      priceplan: prices for Spirited Away
+                      venue: Fordcam Cinema
+                      soldout: false
+                      instance: 791
+                    datelast: 2021-12-02
+                    ticketspostal: false
+                    ticketpreference: letter
+                    templatetickets: ""
+                    templatereceipt: Receipts for Spirited Away
+                    templatelanyards: ""
+                    templateattendance: ""
+                    listsassigned: []
+                    tags:
+                    - Test
+                    informationdetails: |
+                      <div class='cameo_eventlisting_event_details'>
+                      <div class='cameo_eventlisting_venue'>Fordcam Cinema</div>
+                      <div class='cameo_eventlisting_datetimes'></div><div class='cameo_eventlisting_datetimes'><span class='cameo_eventlisting_date'>Wed 1 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span> &amp;  <span class='cameo_eventlisting_date'>Thu 2 Dec 2021</span> <span class='cameo_eventlisting_time'>19:30</span></div> <div class='cameo_eventlisting_prices'><span class="cameo_eventlisting_price">All £10.00</span> <span class="cameo_eventlisting_price">M+G £8.00 (M+G)</span></div>
+                      </div>
+                    informationbookable: true
+                    informationpricerange: £8.00&nbsp;to&nbsp;£10.00
+          description: |-
+            Success:
+
+            An array of matching events (each with occurrences filtered to only include those that match, for example by date)
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: missing query parameters
+          description: "Missing parameters: at least something must be given as the\
+            \ query"
+      summary: eventsfilter.json
+      description: A general search for events. Returns an array of events matching
+        the combination of query parameters given
+    parameters:
+    - examples:
+        events:
+          value: "Spirited%20Away,Frozen"
+      name: events
+      description: "Event name or comma separated list of names of events to search\
+        \ for (if the event name includes a comma, escape it with a backslash)"
+      schema:
+        type: string
+      in: query
+    - examples:
+        status:
+          value: "public,bookable"
+      name: status
+      description: Status or comma separated list of statuses to include
+      schema:
+        enum:
+        - draft
+        - public
+        - bookable
+        - cancelled
+        type: string
+      in: query
+    - examples:
+        venues:
+          value: Camford%20Cinema
+      name: venues
+      description: "Venue name or comma separated list of venues to include (if the\
+        \ venue name contains a comma, escape it with a backslash)"
+      schema:
+        type: string
+      in: query
+    - examples:
+        dates:
+          value: "2021-10-06,2021-10-07"
+      name: dates
+      description: "Date or comma separated list of dates (not times!) to include.\
+        \ Date should be in ISO format: YYYY-MM-DD"
+      schema:
+        type: string
+      in: query
+    - examples:
+        times:
+          value: 19:30
+      name: times
+      description: A start time or comma separated list of start times to include
+        (in the 24-hour format HH:MM)
+      schema:
+        type: string
+      in: query
+    - examples:
+        instances:
+          value: "123,456"
+      name: instances
+      description: "An event number or comma separated list of event numbers to include.\
+        \ If a number is followed by a plus, then all occurrences of any matchiung\
+        \ event will be included, otherwise just the one with that number."
+      schema:
+        type: string
+      in: query
+    - examples:
+        tags:
+          value: Film
+      name: tags
+      description: A tag or comma separated list of tags with which the events to
+        include are tagged.
+      schema:
+        type: string
+      in: query
+    - examples:
+        past:
+          value: both
+      name: past
+      description: "Whether to include past events. If not included, only forthcoming\
+        \ events are returned."
+      schema:
+        enum:
+        - "yes"
+        - "no"
+        - both
+        type: string
+      in: query
+    - examples:
+        membershipnumbers:
+          value: "1234"
+      name: membershipnumbers
+      description: Events booked by the members with this number or comma separated
+        list of membership numbers
+      schema:
+        type: string
+      in: query
+    - examples:
+        references:
+          value: "3456,3457"
+      name: references
+      description: The events for which bookings with this booking reference or comma
+        separated list of references exist
+      schema:
+        type: string
+      in: query
+  /forms.json:
+    description: Lists all forms defined grouped by type
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-forms'
+              examples:
+                "200":
+                  value:
+                    attendance:
+                    - attendance
+                    - attendance-for-A-Cat-In-Paris
+                    - attendance-for-Test-Online
+                    booking:
+                    - booking-for-A-Cat-In-Paris
+                    - booking-for-An-American-In-Paris
+                    - booking-for-Atonement
+                    - booking-for-Ben-Hur
+                    - booking-for-Bringing-Up-Baby
+                    calendar:
+                    - calendar
+                    contact:
+                    - contact
+                    contactus:
+                    - contactus
+                    - contactus2
+                    - request
+                    email:
+                    - email
+                    giftaid:
+                    - giftaid
+                    invoice:
+                    - invoice
+                    join:
+                    - join
+                    mailshot:
+                    - mailshot
+                    - mailshot-devwp
+                    - mailshot2
+                    - mailshot3
+                    optout:
+                    - optout
+                    payment:
+                    - fundraising
+                    - paymentbalance
+                    questions:
+                    - Favourite-tree-questionnaire
+                    - favourite-desserts
+                    renew:
+                    - renew
+                    status:
+                    - status
+                    subscribeone:
+                    - subscribeone
+                    updates:
+                    - updates
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      operationId: forms
+      summary: forms.json
+      description: "Lists names of all forms that have been defined, grouped by form\
+        \ type, or just those of a requested type"
+    parameters:
+    - name: type
+      description: Restrict response only to those forms of the type given
+      schema:
+        type: string
+      in: query
+  /individuals.json:
+    summary: individuals.json
+    description: Provides the name and photo of each individual
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-individuals'
+          description: |-
+            Success
+
+            The individuals array of objects in the response lists the individuals from the identifiewd membership with their name and a data URL for their image photo id (if any) - which can therefore be used as the `src` attribute of an `img` element
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: membership with qrcode 'ABCDE2' not found
+          description: The membership with the given qrcode was not found
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: no qrcode
+          description: qrcode missing or malformed (should be six uppercase letters)
+      summary: individuals.json
+      description: |-
+        Provides the name and photo of each individual.
+
+        The version of Cameo must support photo ids.
+
+        This is primarily intended to offer a user interface to check the identity of someone who produces a membershipo card. For example, consider a gym. They scan their card on the door and that pops up their saved photo to cross-check they are the holder of that card (for example that it hasn't been loaned or stolen)
+    parameters:
+    - name: qrcode
+      description: The qrcode of the membership concerned
+      schema:
+        $ref: '#/components/schemas/qp-qrcode'
+      in: query
+      required: true
+  /mailinglistapply.json:
+    summary: mailinglistapply.json
+    description: Apply changes to mailing list subscriptions for given individual
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-mailinglistapply'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-mailinglistapply'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+      summary: mailinglistapply.json
+      description: Apply changes to mailing list subscriptions for given individual
+  /mailinglistspublic.json:
+    summary: mailinglistspublic.json
+    description: Provides a list of lists available for self-service subscription.
+    get:
+      parameters:
+      - name: list
+        description: |-
+          Usally this parameter is not needed: you will usually want to get the full list of available lists.
+          u
+          The name of a list to include. If the result is empty, that list either does not exist or is not public.
+        schema:
+          type: string
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-mailinglistspublic'
+          description: The returned array of public lists
+      operationId: mailinglistspublic
+      summary: mailinglistspublic.json
+      description: "provides a list of lists available for self-service subscription\
+        \ (or checks a specific one). Subscription to such a list can then be done\
+        \ by including the list name in the mlsin field for individuals either in\
+        \ a new membership to be imported\r\nor using the mailinglistsubscriptions\
+        \ or mailinglistapply api."
+  /mailinglistsubscriptions.json:
+    summary: mailinglistsubscriptions.json
+    description: Determine and amend list subscriptions for each individual in a membership
+      record identified by qrcode
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-mailinglistsubscriptions'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: missing qrcode
+          description: Missing qrcode
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: membership with qrcode 'ABCDEF' not found
+          description: Membership identified by qrcode not found
+      summary: mailinglistsubscriptions.json
+      description: Lists the lists subscribed to by each individual of the identified
+        membership
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-mailinglistsubscriptions'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-mailinglistsubscriptions'
+          description: "Success. The object, as modified, is returned in the same\
+            \ way as GET"
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: malformed mailinglists
+          description: "Something wrong with your request, for example, malformed\
+            \ mailinglists parameter"
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: membership with qrcode 'ABCDEF' not found
+          description: membership identified by qrocde not found
+      summary: mailinglistsubscriptions.json
+      description: Update the list subscription status for the identified membership
+        record
+    parameters:
+    - examples:
+        qrcode:
+          value: ABCDEF
+      name: qrcode
+      description: The qrcode that identifes a membership (six uppercase letters)
+      schema:
+        type: string
+      in: query
+      required: true
+  /membershipnumber.json:
+    summary: membershipnumber.json
+    description: Retrieve limited information about membership record by membership
+      number
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-membership'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: '"membership with membershipnumber ''1234'' not found'
+          description: Membership not found
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: invalid membership number '123x'
+          description: Missing or invalid membershipnumber
+      summary: membershipnumber.json
+      description: "Retrieve limited information about membership record by membership\
+        \ number. Includes all membership record types (current, new, old, contact)"
+    parameters:
+    - examples:
+        membershipnumber:
+          value: "1234"
+      name: membershipnumber
+      description: The membership number of the membership record to retrieve
+      schema:
+        type: integer
+      in: query
+      required: true
+  /qrcode.json:
+    summary: qrcode.json
+    description: Retrieve a membership record by qrcode
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-membership'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: membership with qrcode '$ABCDE' not found
+          description: Missing or invalid qrcode. A qrcode is six uppercase characters.
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: membership with qrcode 'ABCDEF' not found
+          description: Membership record with given qrcode not found
+      summary: qrcode.json
+      description: Retrieve a membership record by qrcode
+    parameters:
+    - name: qrcode
+      description: The qrcode of the membership record to retrieve. A qrcode is six
+        uppercase letters.
+      schema:
+        type: string
+      in: query
+      required: true
+  /reservationcancel.json:
+    summary: reservationcancel.json
+    description: Cancel a booking reservation for an event given its booking number.
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-reservationcancel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-reservationcancel'
+          description: Success
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: reference must be an integer
+          description: Missing or invalid reference
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: booking 3456 not found
+          description: Booking with gfiven reference not found
+      summary: reservationcancel.json
+      description: Cancel a booking reservation for an event given its booking number.
+  /reservationfinalise.json:
+    summary: reservationfinalise.json
+    description: Finalise a provisional reservation.
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-reservationfinalise'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-reservationfinalise'
+          description: Success.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: reference must be an integer
+          description: "One of the parameters is missing when needed, or invalid"
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: no such booking ref 3456
+          description: Booking with given reference number not found
+      summary: reservationfinalise.json
+      description: |-
+        Finalise a provisional reservation. When someone books a place at an event, it should be provisionally reserved (using `/reservation.json`) until they have provided their contact details and, where charged, have completed payment. That reserves the places for 20 minutes (or whatever other time is specified) so that someone else can't take the place while they are paying. Once paid, finalise the reservation by providing the missing details here.
+
+        If the `email` belongs to an existing member, the booking will be made in their name (linked to their record), otherwise a new contact will be created to hold the contact details.
+  /reservation.json:
+    summary: reservation.json
+    description: Make a provisional booking for an event.
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-reservation'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-reservation'
+          description: Success.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: "no such instance: 789"
+          description: The event occurrence identified by the given `instance` is
+            not found
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: reservations must be an array
+          description: "One of the parameters required is missing, or a parameter\
+            \ is invalid "
+        "409":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "409":
+                  value: no spaces available
+          description: "Someone else made a (provisional) booking for the same place\
+            \ at the same time (that is between offering the places and the customer\
+            \ selecting them), and they won the race."
+      summary: reservation.json
+      description: Make a provisional booking for an event.
+  /sendnotification.json:
+    summary: sendnotification.json
+    description: Posts a notification message (to alert Cameo users to something)
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-sendnotification'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-sendnotification'
+          description: Success.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: missing subject
+                "400-2":
+                  value: "one of the membership numbers 1234,5678 does not exist"
+          description: One of the parameters is missing or invalid
+      operationId: sendnotification
+      summary: sendnotification.json
+      description: Posts a notification message (to alert Cameo users to something)
+  /sendtemplate.json:
+    summary: sendtemplate.json
+    description: Sends one or more emails via either a nominated template or one servicing
+      a given form task.
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/request-sendtemplate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-sendtemplate-ok'
+          description: Sends one or more emails via either a nominated template or
+            one servicing a given form task.
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-sendtemplate-error'
+          description: |-
+            Many possible errors, as indicated by the `error` element.
+
+            In addition to returning an eror response, a notification is also posted, so you get to know if an email cannot be sent when used in production.
+      summary: sendtemplate.json
+      description: Sends one or more emails via either a nominated template or one
+        servicing a given form task.
+  /status.json:
+    summary: status.json
+    get:
+      parameters:
+      - name: qrcode
+        description: The qrcode to check. This should be six uppercase letters.
+        schema:
+          type: string
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-status'
+          description: "Success. Note that in this case a membership not found is\
+            \ still a 200 response, but indicated in the status returned."
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: no qrcode
+          description: Qrcode parameter missing or invalid (should be six uppercase
+            letters)
+      summary: status.json
+      description: "Looks up a membership by qrcode to determine their status. This\
+        \ allows you to offer a qrcode scan of a membership card encoding their barcode,\
+        \ and to show their status in response, so if, for example, someone presents\
+        \ a membership card to obtain a discount, the seller can check it is valid,\
+        \ without them obtaining any informaiton other than that."
+  /venuenames.json:
+    summary: venuenames.json
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-venuenames'
+          description: "The public names of the requested venues, organised as an\
+            \ object keyed by requeste names and values the corresponding public names.\
+            \ If a venue does not exist it will not be included in the returned object\
+            \ (which can, therefore, be empty)"
+        "401":
+          $ref: '#/components/responses/401'
+        "500":
+          $ref: '#/components/responses/500'
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: missing venues
+          description: Missing or invalid `venues`
+      operationId: venuenames
+      summary: venuenames.json
+      description: Returns the public names of venues requested
+    parameters:
+    - examples:
+        venues:
+          value: Camford cinema raked seating
+      name: venues
+      description: "The names of venues for whioch public names are required, a list\
+        \ separated by `|`"
+      schema:
+        type: string
+      in: query
+  /venue.json:
+    summary: venue.json
+    description: Definition of the venue requested including all its price plans.
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-venue'
+          description: Description of the venue requested
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "400":
+                  value: missing venue
+          description: venue missing
+        "401":
+          $ref: '#/components/responses/401'
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                "404":
+                  value: no such venue
+          description: No such venue
+        "500":
+          $ref: '#/components/responses/500'
+      operationId: venue
+      summary: venue.json
+      description: |-
+        Definition of the venue requested including all its price plans.
+
+        The result is complex. Fundamentally, a venue can have allocated or unallocated places (numbered seats or general areas just with capacities). Each area (whether allocated or not) has a price zone. Each price zone is described in one or more pricing plans, with tickets being priced by zone and category (such as Adult and Child), where categories may have conditions (such as _must be a member_ to purchase).
+
+        Along with an event from `eventsfilter.json`, this gives you sufficient data to implement a booking form or process, though the detail needs lots more documentation.
+    parameters:
+    - examples:
+        venue:
+          value: Camford cinema raked seating
+      name: venue
+      description: The (internal) name of the venue whose definition is required
+      schema:
+        type: string
+      in: query
+      required: true
+components:
+  schemas:
+    response-displayemail:
+      title: Root Type for response-displayemail
+      description: "Email date (ISO time stamp), subject (text) and content (html)"
+      type: object
+      properties:
+        date:
+          type: string
+        subject:
+          type: string
+        content:
+          type: string
+      example:
+        date: 2018-07-12T12:37:00BST
+        subject: subject line of the email
+        content: <p>content of the email in HTML.</p>
+    response-allocatemembershipnumber:
+      title: Root Type for allocatemembershipnumber
+      description: response to allocatemembershipnumber endpoint
+      type: object
+      properties:
+        membershipnumber:
+          format: int32
+          description: The membership number allocated
+          type: integer
+      example:
+        membershipnumber: 1001
+    response-contact:
+      title: Root Type for contact
+      description: ""
+      type: object
+      properties:
+        type:
+          type: string
+        membershipnumber:
+          format: int32
+          type: integer
+        called:
+          type: string
+        salutation:
+          type: string
+        qrcode:
+          type: string
+        address:
+          type: object
+          properties:
+            address2:
+              type: string
+            city:
+              type: string
+            address1:
+              type: string
+            postcode:
+              type: string
+        contact:
+          type: object
+          properties:
+            contacttype:
+              type: string
+            contactparty:
+              type: string
+            contacttermstarts:
+              format: date
+              type: string
+            contacttermends:
+              format: date
+              type: string
+            contactbody:
+              type: string
+            contactuid:
+              type: string
+            contactarea:
+              type: string
+        individuals:
+          type: array
+          items:
+            type: object
+            properties:
+              firstname:
+                type: string
+              email:
+                type: string
+              lastname:
+                type: string
+        government:
+          type: object
+          properties:
+            mapitid:
+              format: int32
+              type: integer
+            gss:
+              type: string
+            ons:
+              type: string
+      example:
+        type: contact
+        membershipnumber: 2886
+        called: Cllr Ahmed Ali
+        salutation: Cllr Ali
+        qrcode: JRENPD
+        address:
+          address2: Town Hall
+          city: Manchester
+          address1: Members' Services Office
+          postcode: M60 2LA
+        contact:
+          contacttype: Representative
+          contactparty: Labour
+          contacttermstarts: 2018-05-20
+          contacttermends: 2021-05-04
+          contactbody: Manchester City Council
+          contactuid: manchester.gov.uk/264
+          contactarea: Rusholme
+        individuals:
+        - firstname: Ahmed
+          email: cllr.a.ali@manchester.gov.uk
+          lastname: Ali
+        government:
+          mapitid: 9128
+          gss: E05000714
+          ons: 00BNHQ
+    qp-qrcode:
+      description: "a string of six uppercase alphabetic, or numeric, characters"
+      type: string
+      example: ABCDE2
+    qp-uidhash:
+      description: "Identifier of an email, comprising up to 40 hexadecimal digits.\
+        \ You would obtain this from a link (typically in a query parameter) provided\
+        \ to someone via a Cameo template,  as supplied by\r\nthe `{insert: view in\
+        \ browser link}` or `{insert: view in browser url}` template substitutions"
+      type: string
+      example: 02b17aee67c0a835df922306cd56a668
+    response-discounts:
+      title: Root Type for response-discounts
+      description: "Objects useful for populating a page listing\r\nestablishments\
+        \ which offer discounts to members."
+      type: array
+      items:
+        type: object
+        properties:
+          membershipnumber:
+            format: int32
+            type: integer
+          called:
+            type: string
+          groupurl:
+            type: string
+          address:
+            type: object
+            properties:
+              address1:
+                type: string
+              city:
+                type: string
+              postcode:
+                type: string
+              accuracy:
+                type: string
+              location:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coordinates:
+                    type: array
+                    items:
+                      format: double
+                      type: number
+          phone:
+            type: string
+          email:
+            type: string
+          discountdetails:
+            type: string
+      example:
+      - membershipnumber: 2894
+        called: Kingsway Cycles
+        groupurl: https://www.kingswaycycles.com/
+        address:
+          address1: 8 City Road
+          city: Cambridge
+          postcode: CB1 1DP
+          accuracy: postcode
+          location:
+            type: Point
+            coordinates:
+            - 0.13086974581173
+            - 52.205640257257
+        phone: 01223 355852
+        email: ""
+        discountdetails: 10% off all purchases
+      - membershipnumber: 3054
+        called: Causeway Cafe
+        groupurl: https://causewaycafe.co.uk
+        address:
+          address1: 10 Fen Causeway
+          city: Cambridge
+          postcode: CB3 4GG
+          accuracy: postcode
+          location:
+            type: Point
+            coordinates:
+            - 0.14555
+            - 52.21333
+        phone: 01223 450992
+        email: cafe@causewaycafe.co.uk
+        discountdetails: 5% off all full meals by showing membership card
+    response-email:
+      title: Root Type for response-email
+      description: Response for email.json
+      type: object
+      properties:
+        membershipnumber:
+          format: int32
+          type: integer
+        called:
+          type: string
+        qrcode:
+          type: string
+        toaccount:
+          type: string
+        membershiptype:
+          type: string
+        paymentmethod:
+          type: string
+        expirydate:
+          format: date
+          type: string
+        salutation:
+          type: string
+        _type:
+          description: Deprecated. Same as `type`. Included only for backward compatibility.
+          type: string
+        type:
+          type: string
+        individuals:
+          type: array
+          items:
+            type: object
+            properties:
+              firstname:
+                type: string
+              lastname:
+                type: string
+              monikers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    service:
+                      type: string
+                    handle:
+                      type: string
+              email:
+                type: string
+        address:
+          type: object
+          properties:
+            address1:
+              type: string
+            address2:
+              type: string
+            city:
+              type: string
+            county:
+              type: string
+            country:
+              type: string
+            postcode:
+              type: string
+        giftaiddeclaration:
+          type: object
+          properties:
+            "on":
+              format: date
+              type: string
+            by:
+              type: string
+      example:
+        membershipnumber: 1234
+        called: John & Jane Doe
+        qrcode: BZFTEG
+        toaccount: C
+        membershiptype: Household
+        paymentmethod: SO
+        expirydate: 2016-06-16
+        salutation: John & Jane
+        _type: current
+        type: current
+        individuals:
+        - firstname: John
+          lastname: Doe
+          monikers:
+          - service: Phone (mobile)
+            handle: 07111 111111
+          email: john@doe.com
+        - firstname: Jane
+          lastname: Doe
+          monikers:
+          - service: Phone (mobile)
+            handle: 07111 222222
+          email: jane@doe.com
+        address:
+          address1: 1 High Street
+          address2: Ambridge
+          city: Borset
+          county: Borsetshire
+          country: UK
+          postcode: BB1 1BB
+        giftaiddeclaration:
+          "on": 2014-10-12
+    qp-email:
+      description: an email address
+      type: string
+      example: jane%40doe.com
+    response-emailinfo:
+      title: Root Type for response-emailinfo
+      description: Basic identifiers corresponding to an email uidhash
+      type: object
+      properties:
+        membershipnumber:
+          format: int32
+          type: integer
+        email:
+          type: string
+        qrcode:
+          type: string
+        listname:
+          type: string
+      example:
+        membershipnumber: 111
+        email: me@example.com
+        qrcode: ABCDEF
+        listname: list name
+    qp-currentonly:
+      description: Whether or not only to include current members in the response
+      type: string
+      example: current
+    qp-instance:
+      description: Number of an event (specific event occurrence when more than one)
+      type: string
+      example: "123"
+    response-eventbookings:
+      description: Summary of bookings made for an event so far
+      type: object
+    response-event:
+      title: Root Type for response-event
+      description: An event
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        datefirst:
+          format: date
+          type: string
+        status:
+          type: string
+        occurrences:
+          type: array
+          items:
+            type: object
+            properties:
+              occurrencename:
+                type: string
+              status:
+                type: string
+              datefirst:
+                format: date
+                type: string
+              days:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      format: date
+                      type: string
+                    daystart:
+                      format: int32
+                      type: integer
+                    dayend:
+                      format: int32
+                      type: integer
+              priceplan:
+                type: string
+              venue:
+                type: string
+              instance:
+                format: int32
+                type: integer
+              soldout:
+                type: boolean
+        datelast:
+          format: date
+          type: string
+        ticketspostal:
+          type: boolean
+        ticketpreference:
+          type: string
+        templatetickets:
+          type: string
+        templatereceipt:
+          type: string
+        templatelanyards:
+          type: string
+        templateattendance:
+          type: string
+        listsassigned:
+          type: array
+          items: {}
+        tags:
+          type: array
+          items:
+            type: string
+      example:
+        name: Spirited Away
+        type: event
+        datefirst: 2021-12-01
+        status: bookable
+        occurrences:
+        - occurrencename: "1"
+          status: bookable
+          datefirst: 2021-12-01
+          days:
+          - date: 2021-12-01
+            daystart: 70200
+            dayend: 75600
+          priceplan: prices for Spirited Away
+          venue: Fordcam Cinema
+          instance: 786
+          soldout: false
+        datelast: 2021-12-02
+        ticketspostal: false
+        ticketpreference: letter
+        templatetickets: ""
+        templatereceipt: Receipts for Spirited Away
+        templatelanyards: ""
+        templateattendance: ""
+        listsassigned: []
+        tags:
+        - Test
+    response-forms:
+      description: 'An object keyed by form type listing an array of form names for
+        each type '
+      type: object
+    response-individuals:
+      title: Root Type for response-individuals
+      description: The object describing each individual
+      type: object
+      properties:
+        qrcode:
+          type: string
+        individuals:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              photoid:
+                type: string
+      example:
+        qrcode: JAVGRG
+        individuals:
+        - name: Evan Smith
+          photoid: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgEASABIA/4SQERXhpZgAATU0AKgAAAAgABwESAAMAAAABAAEAAAEaAAUAAAABAAAAYgEbAAUAAAABAAAAagEoAAMAAAABAAIAAAExAAIAAAAcAAAAcgEyAAIAAAAUAAAAjodpAAQAAAABAAAApAAAANAACvyAAAAnEAAK/IAAACcQQ..."
+    request-mailinglistapply:
+      description: POST parameters for /mailinglistapply
+      required:
+      - membershipnumber
+      - email
+      - listname
+      - evidence
+      - contact
+      type: object
+      properties:
+        membershipnumber:
+          description: Identifies the membership record to apply changes to
+          type: integer
+          example: "1234"
+        email:
+          description: Email address of the individual within the membership recordidentified
+            by membershipnumber to apply changes to
+          type: string
+          example: jane%40doe.com
+        listname:
+          description: The name of the Cameo list to subscribe to or unsubscribe from
+            (it toggles their current status on that list)
+          type: string
+          example: Photographers
+        evidence:
+          description: The reason why the subscription is being done. This is stored
+            with the membership record to satisfy GDPR audit requirements.
+          type: string
+          example: completed subscription form
+        contact:
+          description: "`yes` or `no`. When `yes`, they can be opted in to a list,\
+            \ but otherwise, they will only be opted-out whatever their current status."
+          enum:
+          - "yes"
+          - "no"
+          type: string
+      example: membershipnumber=1234
+    response-mailinglistapply:
+      title: Root Type for response-mailinglistapply
+      description: Acknowledgement from mailinglistapply
+      type: object
+      properties:
+        ok:
+          type: string
+      example:
+        ok: ok
+    response-mailinglistspublic:
+      title: Root Type for response-mailinglistspublic
+      description: An array of public lists (suitable for subscription)
+      type: array
+      items:
+        type: object
+        properties:
+          listname:
+            type: string
+          publicname:
+            type: string
+          description:
+            type: string
+          automatic:
+            type: boolean
+      example:
+      - listname: Photographers
+        publicname: Photography volunteers
+        description: A longer description
+        automatic: false
+      - listname: Designers
+        publicname: Design volunteers
+        description: A longer description
+        automatic: false
+    response-mailinglistsubscriptions:
+      title: Root Type for response-mailinglistsubscriptions
+      description: List of lists subscribed to for each individual of an identified
+        membership record
+      type: array
+      items:
+        type: object
+        properties:
+          email:
+            type: string
+          membershipnumber:
+            format: int32
+            type: integer
+          mlsin:
+            type: array
+            items:
+              type: string
+          mlsout:
+            type: array
+            items: {}
+      example:
+      - email: jane@doe.com
+        membershipnumber: 111
+        mlsin:
+        - Photographers
+        - Designers
+        mlsout: []
+      - email: john@doe.com
+        membershipnumber: 111
+        mlsin: []
+        mlsout:
+        - Newsletters
+    request-mailinglistsubscriptions:
+      description: Update the list subscriptions for the identified membership record
+      required:
+      - mailinglists
+      type: object
+      properties:
+        mailinglists:
+          $ref: '#/components/schemas/response-mailinglistsubscriptions'
+          description: "The same as the object returned by GET, modified as needed"
+        list:
+          description: In conjunction ith `reason` records a reason why the change
+            was made - this allows you to implement a "please why you are opting out
+            from this mailing list". This does not affect which lists the changes
+            in the mailinglists object affect.
+          type: string
+          example: Photographers
+        reason:
+          description: In conjunction ith `list` records a reason why the change was
+            made - this allows you to implement a "please why you are opting out from
+            this mailing list"
+          type: string
+          example: No time to read the mailings
+    response-membership:
+      title: Root Type for response-membership
+      description: Full membership record
+      type: object
+      properties:
+        membershipnumber:
+          format: int32
+          type: integer
+        individuals:
+          type: array
+          items:
+            type: object
+            properties:
+              firstname:
+                type: string
+              photoid:
+                type: string
+              email:
+                type: string
+              lastname:
+                type: string
+        called:
+          type: string
+        salutation:
+          type: string
+        address:
+          type: object
+          properties:
+            address1:
+              type: string
+            address2:
+              type: string
+            city:
+              type: string
+            postcode:
+              type: string
+            accuracy:
+              type: string
+            political:
+              type: array
+              items:
+                type: object
+                properties:
+                  mapittype:
+                    type: string
+                  areaname:
+                    type: string
+                  bodyname:
+                    type: string
+            md5:
+              type: string
+            geolocation:
+              type: object
+              properties:
+                lon:
+                  format: double
+                  type: number
+                lat:
+                  format: double
+                  type: number
+        type:
+          type: string
+        deliveryround:
+          type: string
+        deliverymethod:
+          type: string
+        membershiptype:
+          type: string
+        joined:
+          format: date
+          type: string
+        expirydate:
+          format: date
+          type: string
+        qrcode:
+          type: string
+        source:
+          type: string
+        paymentmethod:
+          type: string
+        giftaiddeclaration:
+          type: object
+          properties:
+            by:
+              type: string
+            "on":
+              format: date
+              type: string
+        toaccount:
+          type: string
+        datelastrenewed:
+          format: date
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+        amountdonation:
+          format: int32
+          type: integer
+      example:
+        membershipnumber: 2804
+        individuals:
+        - firstname: Evan
+          photoid: Xo7PVnwBI7S1-2arV5hm
+          email: evan_smith@phonecoop.coop
+          lastname: Smith
+        called: Evan Smith
+        salutation: Evan
+        address:
+          address1: 82 Hitchings Leaze
+          address2: Patchway
+          city: Filton
+          postcode: BS34 5FT
+          accuracy: street+postcode
+          political:
+          - mapittype: UTW
+            areaname: Patchway
+            bodyname: South Gloucestershire Council
+          - mapittype: WMC
+            areaname: Filton and Bradley Stoke
+            bodyname: House of Commons
+          - mapittype: EUR
+            areaname: South West
+            bodyname: European Parliament
+          md5: b588286a279d295f57028d79c514684b
+          geolocation:
+            lon: -2.5756163
+            lat: 51.5288441
+        type: current
+        deliveryround: MAIL
+        deliverymethod: Web
+        membershiptype: Individual
+        joined: 2010-12-23
+        expirydate: 2018-12-23
+        qrcode: JAVGRG
+        source: website
+        giftaiddeclaration:
+          "on": 2011-04-15
+        datelastrenewed: 2018-01-11
+        attachments:
+        - Xo7PVnwBI7S1-2arV5hm
+    request-reservationcancel:
+      description: Identify the reservation to be cancelled
+      required:
+      - reference
+      type: object
+      properties:
+        reference:
+          description: The reference of the reservation to be cancelled
+          type: string
+          example: "3456"
+    response-reservationcancel:
+      title: Root Type for response-reservationcancel
+      description: Acknolwledgement of cancellation
+      type: object
+      properties:
+        status:
+          type: string
+      example:
+        status: ok
+    request-reservationfinalise:
+      description: Identify the reservation to finalise and supplay additiuonal informatiuon
+        about the booking
+      required:
+      - reference
+      type: object
+      properties:
+        reference:
+          description: The reference number of the reservation (as obtained from `/reservation`)
+          type: string
+          example: "1234"
+        ticketpreference:
+          description: How tickets for the booking should be delievered. Default `none`
+            if omitted
+          enum:
+          - none
+          - collect
+          - email
+          - letter
+          type: string
+          example: email
+        email:
+          description: "The email address of the customer. Required if ticketpreference\
+            \ is `email`, otherwise optional."
+          type: string
+          example: jane%40doe.com
+        postcode:
+          description: "The postcode of the customer. Required if `ticketpreference`\
+            \ is `letter`, otherwise optional."
+          type: string
+          example: BS1%204DD
+        phone:
+          description: Phone number of the customer
+          type: string
+          example: 07700 123456
+        body:
+          description: "The name of the group, organisation or company that the booking\
+            \ is being made for. (This would be used, for example, if producing lanyard\
+            \ badges for a conference)"
+          type: string
+          example: Bristol City Council
+        role:
+          description: "The role or job title of the customer. (This would be used,\
+            \ for example, on lanyard badges for a conference booking)"
+          type: string
+          example: Chief Executive Officer
+    response-reservationfinalise:
+      title: Root Type for response-reservationfinalise
+      description: The booking object as amended by the finalisation
+      type: object
+      properties:
+        date:
+          format: date-time
+          type: string
+        eventname:
+          type: string
+        occurrencename:
+          type: string
+        timing:
+          type: string
+        venuepublic:
+          type: string
+        venuename:
+          type: string
+        venuetype:
+          type: string
+        instance:
+          type: string
+        expiry:
+          format: int32
+          type: integer
+        reservations:
+          type: array
+          items:
+            type: object
+            properties:
+              place:
+                type: string
+              category:
+                type: string
+              zone:
+                type: string
+              price:
+                format: int32
+                type: integer
+              qrcode:
+                type: string
+        ticketpreference:
+          type: string
+        templatereceipt:
+          type: string
+        status:
+          type: string
+        reference:
+          type: string
+        changeby:
+          type: string
+        changeon:
+          format: date-time
+          type: string
+        membershipnumber:
+          format: int32
+          type: integer
+        individual:
+          format: int32
+          type: integer
+        bookedby:
+          type: string
+        _id:
+          type: string
+        _is:
+          type: string
+      example:
+        date: 2021-09-29T17:48:59+01:00
+        eventname: The Godfather III
+        occurrencename: "1"
+        timing: 10 Jan 2022 19:30
+        venuepublic: Camford Cinema
+        venuename: Camford Cinema (2) for The Godfather III
+        venuetype: capacity
+        instance: "450"
+        expiry: 20
+        reservations:
+        - place: all tickets
+          category: all tickets
+          zone: all
+          price: 0
+          qrcode: FBYBChMeAAABwgAADEoAAVAjKxze4m6rdIXEd0m036g
+        ticketpreference: none
+        templatereceipt: Booking receipt
+        status: booked
+        reference: "3146"
+        changeby: David
+        changeon: 2021-09-29T17:49:07+01:00
+        membershipnumber: 7945
+        individual: 0
+        bookedby: Joel Davis
+        _id: 27J1MnwBDpgFeT0Kl1jW
+        _is: bookings
+    request-reservation:
+      description: |-
+        Make a provisional reservation (event booking). (Finalise the reserveation using `reservationfinalise.json`)
+
+        Provisional reservaiton prevents someone else booking the same places while the customer enters their details and makes payment. The provisional booking expires after the interval given by `expiry` (or 20 minutes by default), after which you can still complete the reservation provided no one else has reserved any of the same places (or the event is sold out) in the meantime.
+      required:
+      - instance
+      - reservations
+      type: object
+      properties:
+        instance:
+          description: The event number of the occurrence of an event to book.
+          type: integer
+          example: "789"
+        expiry:
+          description: The number of minutes before the reservation expires (20 by
+            default)
+          type: integer
+          example: "30"
+        reservations:
+          $ref: '#/components/schemas/request-reservations-reservation'
+          description: "The JSON-encoded list of reservations to provisionally book.\
+            \ An error will be returned if the seats are taken, the area is sold out,\
+            \ etc."
+    request-reservations-reservation:
+      title: Root Type for request-reservations-reservation
+      description: "JSON-encoded array of reservations. Each reservation shows the\
+        \ place (seat number for allocated seating, or area for unallocated) and category\
+        \ (for example, Adult or Child, accroding to the venue's price plan for the\
+        \ event)."
+      type: array
+      items:
+        type: object
+        properties:
+          place:
+            type: string
+          category:
+            type: string
+      example:
+      - place: all tickets
+        category: all
+      - place: all tickets
+        category: all
+    response-reservation:
+      title: Root Type for response-reservation
+      description: "The provisional booking made. Note the reference number, which\
+        \ can be used to later finalise or cancel the booking (with `reservationfinalise.json`\
+        \ or `reservationcancel.json` respectively)"
+      type: object
+      properties:
+        date:
+          format: date-time
+          type: string
+        eventname:
+          type: string
+        occurrencename:
+          type: string
+        timing:
+          type: string
+        venuepublic:
+          type: string
+        venuename:
+          type: string
+        venuetype:
+          type: string
+        instance:
+          type: string
+        expiry:
+          format: int32
+          type: integer
+        reservations:
+          type: array
+          items:
+            type: object
+            properties:
+              place:
+                type: string
+              category:
+                type: string
+              zone:
+                type: string
+              price:
+                format: int32
+                type: integer
+              qrcode:
+                type: string
+        ticketpreference:
+          type: string
+        templatereceipt:
+          type: string
+        totalprice:
+          format: int32
+          type: integer
+        status:
+          type: string
+        reference:
+          type: string
+        changeby:
+          type: string
+        changeon:
+          format: date-time
+          type: string
+        _id:
+          type: string
+        _is:
+          type: string
+      example:
+        date: 2021-10-07T15:28:00+01:00
+        eventname: Spirited Away
+        occurrencename: "1"
+        timing: 1 Dec 2021 19:30
+        venuepublic: Fordcam Cinema
+        venuename: Fordcam Cinema
+        venuetype: capacity
+        instance: "786"
+        expiry: 20
+        reservations:
+        - place: all tickets
+          category: All
+          zone: all
+          price: 10
+          qrcode: FBUMARMeAAADEgAADEsAATGEjMUGYLFvt9iQdh6wB4w
+        - place: all tickets
+          category: All
+          zone: all
+          price: 10
+          qrcode: FBUMARMeAAADEgAADEsAAuH3bz9zFDycB86E1H3wDc4
+        ticketpreference: none
+        templatereceipt: Receipts for Spirited Away
+        totalprice: 20
+        status: reserved
+        reference: "3147"
+        changeby: David
+        changeon: 2021-10-07T15:28:00+01:00
+        _id: YY4nW3wBI7S1-2arY5h3
+        _is: bookings
+    request-sendnotification:
+      description: The information to be notified by `sendnotification.json`
+      required:
+      - subject
+      - content
+      type: object
+      properties:
+        subject:
+          description: The subject line of the notification (plain text)
+          type: string
+          example: Don't forget to buy carrots
+        content:
+          description: "The HTML content of the message. Note: the content is sanitised\
+            \ before being stored: you cannot include JavaScript elements in the content,\
+            \ for example."
+          type: string
+          example: <p>You'll need carrots for the visit to the zoo next week</p>
+        membershipnumbers:
+          description: "An optional, comma and/or space-separtated list of membership\
+            \ numbers to wqhich the notification refers. The corresponding membership\
+            \ records must exist!"
+          type: string
+          example: "1234, 1238"
+        tags:
+          description: "An optional, space and/or comma separated list of tags to\
+            \ apply to the nbotification. Tags control who gets emailed copies of\
+            \ the message."
+          type: string
+          example: EventReminder
+        date:
+          description: "The date on which the notification should be posted. This\
+            \ must be today (in which case it is posted immediately) or in the future.\
+            \ Default is today. Date can be in any reasonable format, including relative\
+            \ (e.g. `tomorrow`)"
+          type: string
+          example: tomorrow
+        by:
+          description: Who is making the post. Will be preceded by "form ". Defaulots
+            to "Cameo" if not given.
+          type: string
+          example: Reminder
+    response-sendnotification:
+      title: Root Type for response-sendnotification
+      description: Acknowledgement of sending notification
+      type: boolean
+      example: true
+    request-sendtemplate:
+      description: The parameters needed for the `sendtemplate` reequest to send emails
+        via a nominated template
+      type: object
+      properties:
+        template:
+          description: "Name of a specific template to merge with. One of `template`,\
+            \ `task`, or `audience` must be given"
+          type: string
+          example: mailshot
+        task:
+          description: "Name of a task which identifies a template to merge with.\
+            \ One of `template`, `task`, or `audience` must be given"
+          type: string
+        audience:
+          description: "Name of list which replaces the audience of the nominated\
+            \ template. One of `template`, `task`, or `audience` must be given"
+          type: string
+        to:
+          description: "When `audience` not supplied - individually chosen template\
+            \ or services form, for example, sends the message to this explicit address.\
+            \ Can either be an email address or `name<email>`. No membership record\
+            \ need exist in order to send email like this."
+          type: string
+          example: Jane Doe<jane@doe.com>
+        email:
+          description: Identifies by email address an individual with an existing
+            membership record to send to. This means the other data from the record
+            can be substituted.
+          type: string
+          example: jane@doe.com
+        qrcode:
+          description: Identifies by qrcode an individual with an existing membership
+            record to send to. This means the other data from the record can be substituted.
+            Qrcode comprises six uppercase letters.
+          type: string
+        membershipnumber:
+          description: Identifies by membership number all the individuals in an existing
+            membership record to send to. This means the other data from the record
+            can be substituted. This is just like using `individually chosen` from
+            Cameo.
+          type: string
+          example: "1234"
+        membershiprecord:
+          description: "Supplies a memberhsip record to whom to send. This just saves\
+            \ looking it up if you already have it, and substitutions can be made\
+            \ from it."
+          type: string
+        substitutions:
+          description: |-
+            JSON object containing call-specific substitutions to be made into the template. These will be substituted by {form: _sub_} substitutions, where _sub_ is the key into this object. Substitutions are plain text.
+
+            For example, if tis object is
+             {
+                 "who": "Jane Doe"
+                 "when": "yesterday"
+             }
+            then the template will substitute `{form: who}` with "Jane Doe"
+          type: string
+          example: |-
+            {
+                "who": "Jane Doe"
+                "when": "yesterday"
+            }
+        urgent:
+          description: "If given and not empty, email will be sent immediately, otherwise\
+            \ will be queued for sending in a few minutes"
+          type: string
+          example: "yes"
+    response-sendtemplate-ok:
+      title: Root Type for response-sendtemplate-ok
+      description: |-
+        Acknowledges sending of the messages.
+
+        `status` is "ok" on success and "error" on failure. On error, a further fioeld is included, `error`: the text of the error message
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/response-sendtemplate-ok-object'
+          description: JSON response for `sendnotification.json`
+          example: "{\"status\": \"sent\"}"
+      example:
+        status: sent
+    response-sendtemplate-error:
+      title: Root Type for response-sendtemplate-error
+      description: Response to `sendtemplate.json` in the event of an error
+      type: object
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+      example:
+        status: error
+        error: email address jane@doe.com not found
+    response-sendtemplate-ok-object:
+      title: Root Type for response-template-ok-object
+      description: "Possible success responses to `sendtemplate.json`. `pending` is\
+        \ the usual response. `sent` means the message is on its way, which happens\
+        \ when `urgent` is given"
+      required:
+      - success
+      type: object
+      properties:
+        success:
+          enum:
+          - sent
+          - pending
+          type: string
+      example:
+        success: sent
+    response-status:
+      description: The response to the `status.json` endpoint
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          description: |
+            the status of the qiven code:
+            `current`: the code identifies a current paying member
+            `contact`: the code identifies a contact (non-paying)
+            `expired`: the code belongs to a member whose membership has expired
+            `cancelled`: the code did belong to a member, but it has been replaced because their card was lost or stolen
+            `doesnotexist`: there is no membership record with that code
+          enum:
+          - doesnotexist
+          - expired
+          - current
+          - contact
+          - cancelled
+          type: string
+    response-venuenames:
+      title: Root Type for response-venuenames
+      description: Lists the public names of venues as an object keyed by internal
+        name and value the corresponding public name (which may be the same)
+      type: object
+      properties:
+        Camford cinema raked seating:
+          type: string
+      example:
+        Camford cinema raked seating: Camford Cinema
+    response-venue:
+      title: Root Type for response-venue
+      description: The description of a requested venue
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        map:
+          type: string
+        venueunallocated:
+          type: array
+          items:
+            type: object
+            properties:
+              item:
+                type: string
+              zone:
+                type: string
+              capacity:
+                format: int32
+                type: integer
+        prices:
+          type: array
+          items:
+            type: object
+            properties:
+              pricename:
+                type: string
+              categories:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    category:
+                      type: string
+                    requirements:
+                      type: string
+                    prices:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          zone:
+                            type: string
+                          amount:
+                            format: int32
+                            type: integer
+                          pricetype:
+                            type: array
+                            items: {}
+              bookingfee:
+                format: int32
+                type: integer
+              ticketpostagefee:
+                format: int32
+                type: integer
+              description:
+                type: string
+        url:
+          type: string
+        publicname:
+          type: string
+      example:
+        name: Camford cinema raked seating
+        type: capacity
+        map: ""
+        venueunallocated:
+        - item: all
+          zone: all
+          capacity: 200
+        prices:
+        - pricename: aa1
+          categories:
+          - category: Adult
+            requirements: ""
+            prices:
+            - zone: all
+              amount: 1
+              pricetype: []
+            - zone: all
+              amount: 0.5
+              pricetype:
+              - memberrate
+          bookingfee: 10
+          ticketpostagefee: 5
+          description: |
+            desc
+        - pricename: Film
+          categories:
+          - requirements: ""
+            category: all
+            prices:
+            - amount: 10
+              zone: all
+        - pricename: prices for The Last Emperor 2
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 10
+              zone: all
+        - pricename: prices for The Last Emperor 3
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 10
+              zone: all
+        - pricename: prices for The Last Emperor 4
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 10
+              zone: all
+        - pricename: prices for Mary Poppins
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 12
+              zone: all
+        - pricename: prices for Double Indemnity
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 0
+              zone: all
+        - pricename: prices for An American In Paris
+          categories:
+          - requirements: ""
+            category: all tickets
+            prices:
+            - amount: 0
+              zone: all
+        - pricename: prices for The Hound of the Baskervilles
+          categories:
+          - category: all tickets
+            requirements: ""
+            prices:
+            - zone: all
+              amount: 10
+              pricetype: []
+        url: https://example.com
+        publicname: Camford Cinema
+  responses:
+    "401":
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            not authorised:
+              value: api attempt with incorrect username/password
+      description: Common response when BasicAuth authentication is missing or incorrect
+        (not validated)
+    "500":
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            "500":
+              value: crash
+      description: Something went wrong
+  securitySchemes:
+    BasicAuth:
+      scheme: basic
+      type: http
+      description: |-
+        Authentication is by BasicAuth, as in https://USER:PASSWORD@server/api/endpoint...
+        Obtain these from the API Keys section in Cameo. These are not your regular Cameo login!
+
+        Each API key is restricted to one or more API endpoints that you specify when obtaining the key.
