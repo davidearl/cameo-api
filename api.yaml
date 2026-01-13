@@ -18,7 +18,7 @@ servers:
         default: demo.cameo-membership.uk
         description: Your Cameo domain (e.g., cameo.yourorganisation.organisation)
 tags:
-  - name: Cameo API
+  - name: Cameo API (all)
     description: 
   - name: Events and bookings
     description: 
