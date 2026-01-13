@@ -2823,7 +2823,19 @@ components:
       scheme: basic
       type: http
       description: |
-        Authentication is by BasicAuth, as in https://USER:PASSWORD@server/api/endpoint...
-        Obtain these from the API Keys section in Cameo. These are not your regular Cameo login!
+        Authentication is by means of an API key obtained from Cameo in admin &rarr; api keys.
+        These are not your regular login!
+        Each key comprises a user name and password separated by a colon.
 
-        Each API key is restricted to one or more API endpoints that you specify when obtaining the key.
+        Each API key is restricted to access only from those API endpoints that you select when making the key.
+
+        Each API key is also restricted to access from:
+        * your organisation website,
+        * any additional domains or IP addresses that are permitted for forms in forms &rarr; server configuration
+        * any additional domains, IP addresses, or IP address ranges (CIDR) provided for the key
+
+        Provide the key (that is, `USER:PASSWORD`) via _BasicAuth_, as in one of:
+        * `https://USER:PASSWORD@server/api/endpoint...`
+        * `https://server/api/endpoint...?auth=USER:PASSWORD` or
+        * with the header `Authorization: Basic BASE64_ENCODED_KEY`
+
