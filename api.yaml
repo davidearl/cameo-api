@@ -32,7 +32,7 @@ paths:
       To allocate a new, unique membership number, for example to use in a membership form.
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -61,7 +61,7 @@ paths:
   /contact.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -109,7 +109,7 @@ paths:
   /discounts.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -142,7 +142,7 @@ paths:
   /displayemail.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -186,7 +186,7 @@ paths:
   /email.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -229,7 +229,7 @@ paths:
   /emailinfo.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -284,7 +284,7 @@ paths:
   /eventbookings.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -352,7 +352,7 @@ paths:
         in: query
         required: true
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -409,7 +409,7 @@ paths:
   /eventsfilter.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -597,7 +597,7 @@ paths:
   /forms.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -675,7 +675,7 @@ paths:
   /formspublished.json:
     post:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -708,7 +708,7 @@ paths:
   /individuals.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -769,7 +769,7 @@ paths:
               $ref: '#/components/schemas/request-mailinglistapply'
         required: true
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Lists
       responses:
         "200":
@@ -796,7 +796,7 @@ paths:
           type: string
         in: query
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Lists
       responses:
         "200":
@@ -820,7 +820,7 @@ paths:
       Determine and amend list subscriptions for each individual in a membership record identified by qrcode
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Lists
       responses:
         "200":
@@ -861,7 +861,7 @@ paths:
             schema:
               $ref: '#/components/schemas/request-mailinglistsubscriptions'
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -910,7 +910,7 @@ paths:
   /membershipnumber.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -957,7 +957,7 @@ paths:
   /qrcode.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -1010,7 +1010,7 @@ paths:
               $ref: '#/components/schemas/request-reservationcancel'
         required: true
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -1054,7 +1054,7 @@ paths:
             schema:
               $ref: '#/components/schemas/request-reservationfinalise'
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -1109,7 +1109,7 @@ paths:
             schema:
               $ref: '#/components/schemas/request-reservation'
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -1174,7 +1174,7 @@ paths:
             schema:
               $ref: '#/components/schemas/request-sendnotification'
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -1210,7 +1210,7 @@ paths:
               $ref: '#/components/schemas/request-sendtemplate'
         required: true
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -1246,7 +1246,7 @@ paths:
           type: string
         in: query
       tags:
-        - Cameo API
+        - Cameo API (all)
       responses:
         "200":
           content:
@@ -1289,7 +1289,7 @@ paths:
   /venuenames.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
@@ -1338,7 +1338,7 @@ paths:
   /venue.json:
     get:
       tags:
-        - Cameo API
+        - Cameo API (all)
         - Events and bookings
       responses:
         "200":
