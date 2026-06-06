@@ -39,11 +39,8 @@ paths:
               $ref: '#/components/schemas/response-contact'
       responses:
         "200":
-      content:
-        application/json:
-          schema:
-            type: string
-          description: Success, just the JSON string "ok"
+          description: |
+            Success, just the JSON string "ok"
         "401":
           $ref: '#/components/responses/401'
         "500":
@@ -53,7 +50,7 @@ paths:
         To add a new contact record.
       description: |
         The json-encoded contact record to add as the payload of the request - which requires content-type to be set as a header.
-        You must include a contact object which at leats includes contacttype;
+        You must include a contact object which at least includes contacttype;
         at least one individual
         (with at least firstname and ideally email). Ideally also include source
   /addnewmember.json:
@@ -68,10 +65,8 @@ paths:
               $ref: '#/components/schemas/response-membership'
       responses:
         "200":
-        application/json:
-          schema:
-            type: string
-          description: Success, just the JSON string "ok"
+          description: |
+            Success, just the JSON string "ok"
         "401":
           $ref: '#/components/responses/401'
         "500":
