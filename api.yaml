@@ -31,11 +31,6 @@ paths:
     post:
       requestBody:
         required: true
-        description: |
-          The json-encoded member record to add as the payload of the request - which requires content-type to be set as a header.
-          You must include membershiptype,
-          paymentmethod and a number of individuals that corresponds with the membership type
-          (with at least firstname and ideally email). Ideally also include source
         content:
           application/json:
             schema:
@@ -48,9 +43,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/response-forms'
-              examples:
-                "200":
-                  value: "received: ok"
           description: Success, just the JSON string "ok"
         "401":
           $ref: '#/components/responses/401'
@@ -60,7 +52,10 @@ paths:
       summary: |
         To add a new member record (ready for enrolment).
       description: |
-        To add a new member record (ready for enrolment).
+        The json-encoded member record to add as the payload of the request - which requires content-type to be set as a header.
+        You must include membershiptype,
+        paymentmethod and a number of individuals that corresponds with the membership type
+        (with at least firstname and ideally email). Ideally also include source
   /allocatemembershipnumber.json:
     description: |
       To allocate a new, unique membership number, for example to use in a membership form.
