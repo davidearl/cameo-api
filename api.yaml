@@ -39,8 +39,6 @@ paths:
               $ref: '#/components/schemas/response-contact'
       responses:
         "200":
-          content:
-            application/json:
           description: Success, just the JSON string "ok"
         "401":
           $ref: '#/components/responses/401'
@@ -66,8 +64,6 @@ paths:
               $ref: '#/components/schemas/response-membership'
       responses:
         "200":
-          content:
-            application/json:
           description: Success, just the JSON string "ok"
         "401":
           $ref: '#/components/responses/401'
