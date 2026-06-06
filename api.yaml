@@ -29,8 +29,19 @@ security:
 paths:
   /addnewmember.json:
     post:
-      tags:
-        - Cameo API all
+      requestBody:
+        required: true
+        description: |
+          The json-encoded member record to add as the payload of the request - which requires content-type to be set as a header.
+          You must include membershiptype,
+          paymentmethod and a number of individuals that corresponds with the membership type
+          (with at least firstname and ideally email). Ideally also include source
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/response-membership'
+        tags:
+          - Cameo API all
       responses:
         "200":
           content:
@@ -50,17 +61,6 @@ paths:
         To add a new member record (ready for enrolment).
       description: |
         To add a new member record (ready for enrolment).
-    requestBody:
-      required: true
-      description: |
-        The json-encoded member record to add as the payload of the request - which requires content-type to be set as a header.
-        You must include membershiptype,
-        paymentmethod and a number of individuals that corresponds with the membership type
-        (with at least firstname and ideally email). Ideally also include source
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/response-membership'
   /allocatemembershipnumber.json:
     description: |
       To allocate a new, unique membership number, for example to use in a membership form.
